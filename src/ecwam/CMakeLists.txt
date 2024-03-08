@@ -563,6 +563,7 @@ if( HAVE_WAM_LOKI )
       target_compile_options( ${ecwam}_idem_stack PUBLIC "-fcray-pointer" )
   endif()
 
+
   if( HAVE_WAM_GPU )
 ############################################################
 ##  Loki SCC transformation:                              ##
@@ -668,8 +669,59 @@ if( HAVE_WAM_LOKI )
      endif()
   endif()
 endif()
-
 if( HAVE_CUDA )
+############################################################
+##  Loki SCC transformation:                              ##
+############################################################
+     foreach(src ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods})
+        string(REPLACE ".F90" "" fnc ${src})
+        string(CONCAT fnm "loki-cuf/" ${fnc} ".cuf_hoist_new.F90")
+        list(APPEND loki_cuf_srcs ${fnm})
+     endforeach()
+
+     set_source_files_properties( ${loki_cuf_srcs} PROPERTIES COMPILE_OPTIONS "-Mcuda=maxregcount:128 -Minfo=accel" )
+
+     loki_transform_convert(
+         MODE cuf-hoist-new FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
+         CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
+         PATH ${CMAKE_CURRENT_SOURCE_DIR}
+         INCLUDES ${ecwam_intfb_includes}
+         OUTPATH ${CMAKE_CURRENT_BINARY_DIR}/loki-cuf
+         OUTPUT ${loki_cuf_srcs}
+         DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}
+     )
+
+     ecbuild_add_library(
+        TARGET           ${ecwam}_cuf
+        TYPE             ${LIBRARY_TYPE}
+        SOURCES          ${ecwam_srcs} ${loki_cuf_srcs} ${phys_srcs}
+        PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
+                                         ${MPI_Fortran_LIBRARIES}
+                                         ${${PNAME}_OCEANMODEL_LIBRARIES}
+					 $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
+        PRIVATE_LIBS     eccodes_f90
+                                         ${MULTIO_LIBRARIES}
+                                         ${OpenMP_Fortran_LIBRARIES}
+					 $<${HAVE_FIELD_API}:field_api_${prec}>
+					 MPI::MPI_Fortran
+        PUBLIC_INCLUDES  $<INSTALL_INTERFACE:include>
+        PRIVATE_INCLUDES ${${PNAME}_OCEANMODEL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+        PUBLIC_DEFINITIONS ${ECWAM_DEFINITIONS} WAM_PHYS_GPU
+     )
+
+     ecwam_target_fortran_module_directory(
+        TARGET ${ecwam}_cuf
+        MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}_cuf
+        INSTALL_DIRECTORY module/${ecwam}_cuf
+     )
+
+     ecwam_target_compile_definitions_FILENAME( ${ecwam}_cuf )
+
+     target_link_options( ${ecwam}_cuf PUBLIC "-cuda;-gpu=pinned" )
+
+     # if( CMAKE_Fortran_COMPILER_ID MATCHES PGI|NVHPC AND HAVE_ACC )
+     #    target_compile_options( ${ecwam}_cuf PUBLIC "-gpu=gvmode,maxregcount:128" )
+     # endif()
 ############################################################
 ##  SCC-cuf variant with parametrised temporaries:        ##
 ############################################################

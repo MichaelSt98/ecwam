@@ -56,6 +56,16 @@ if( HAVE_WAM_LOKI )
 endif()
 
 if( HAVE_CUDA )
+
+if( HAVE_WAM_LOKI )
+    ecbuild_add_executable(
+	TARGET          ${PROJECT_NAME}-chief-loki-scc-cuf
+	SOURCES         chief.F90
+	LIBS            ${PROJECT_NAME}_cuf ${OpenMP_Fortran_LIBRARIES}
+    )
+    ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-loki-scc-cuf)
+endif()
+
     ecbuild_add_executable(
         TARGET          ${PROJECT_NAME}-chief-scc-cuf
         SOURCES         chief.F90

@@ -171,7 +171,8 @@ IF (LLGCBZ0) THEN
             ZCHAR = MIN(ZCHAR,ALPHAMAX)
             CDFG = ACDLIN + BCDLIN*SQRT(ZCHAR) * UTOP(IJ)
           ELSE
-            CDFG = CDM(UTOP(IJ))
+            ! CDFG = CDM(UTOP(IJ)) ! TODO: revert and automate
+            CDFG = MAX(MIN(0.0006_JWRB+0.00008_JWRB*UTOP(IJ), 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(UTOP(IJ)-33._JWRB))),0.001_JWRB)
           ENDIF
           USTAR(IJ) = UTOP(IJ)*SQRT(CDFG)
         ENDDO
@@ -210,7 +211,8 @@ IF (LLGCBZ0) THEN
         ENDDO
         ! protection just in case there is no convergence
         IF (ITER > NITER ) THEN
-          CDFG = CDM(UTOP(IJ))
+          ! CDFG = CDM(UTOP(IJ))
+          CDFG = MAX(MIN(0.0006_JWRB+0.00008_JWRB*UTOP(IJ), 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(UTOP(IJ)-33._JWRB))),0.001_JWRB)
           USTAR(IJ) = UTOP(IJ)*SQRT(CDFG)
           Z0MINRST = USTAR(IJ)**2 * ALPHA*GM1
           Z0(IJ) = MAX(XNLEV/(EXP(XKUTOP/USTAR(IJ))-1.0_JWRB), Z0MINRST)
@@ -259,7 +261,8 @@ IF (LLGCBZ0) THEN
           ENDDO
           ! protection just in case there is no convergence
           IF (ITER > NITER ) THEN
-            CDFG = CDM(UTOP(IJ))
+            ! CDFG = CDM(UTOP(IJ))
+            CDFG = MAX(MIN(0.0006_JWRB+0.00008_JWRB*UTOP(IJ), 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(UTOP(IJ)-33._JWRB))),0.001_JWRB)
             USTAR(IJ) = UTOP(IJ)*SQRT(CDFG)
             Z0MINRST = USTAR(IJ)**2 * ALPHA*GM1
             Z0(IJ) = MAX(XNLEV/(EXP(XKUTOP/USTAR(IJ))-1.0_JWRB), Z0MINRST)
@@ -334,18 +337,5 @@ ENDIF
 
 IF (LHOOK) CALL DR_HOOK('TAUT_Z0',1,ZHOOK_HANDLE)
 
-CONTAINS
-
-!  INLINE FUNCTION.
-!  ----------------
-
-!  Simple empirical fit to model drag coefficient
-   FUNCTION CDM(U10)
-      !$loki routine seq
-      REAL(KIND=JWRB), INTENT(IN) :: U10 
-      REAL(KIND=JWRB) :: CDM
-
-      CDM = MAX(MIN(0.0006_JWRB+0.00008_JWRB*U10, 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(U10-33._JWRB))),0.001_JWRB)
-   END FUNCTION CDM
 
 END SUBROUTINE TAUT_Z0
