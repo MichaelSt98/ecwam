@@ -1,0 +1,54 @@
+MODULE SETICE_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE SETICE_fc (KIJS, KIJL, FL1, CICOVER, COSWDIF, CITHRSH, EPSMIN, FLMIN, NANG, NFRE, ICHNK, NCHNK, IJ)
+    USE iso_c_binding, ONLY: c_loc
+    USE PARKIND_WAVE, ONLY: JWIM, JWRB
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    IMPLICIT NONE
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CITHRSH
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPSMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: FLMIN
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NANG
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER, VALUE, INTENT(IN) :: NCHNK
+    INTERFACE
+      SUBROUTINE SETICE_iso_c (KIJS, KIJL, FL1, CICOVER, COSWDIF, CITHRSH, EPSMIN, FLMIN, NANG, NFRE, ICHNK, NCHNK, IJ) &
+      &  BIND(c, name="setice_c_launch")
+        USE iso_c_binding, ONLY: c_int, c_ptr
+        implicit none
+        INTEGER(KIND=c_int), VALUE :: KIJS
+        INTEGER(KIND=c_int), VALUE :: KIJL
+        TYPE(c_ptr), VALUE :: FL1
+        TYPE(c_ptr), VALUE :: CICOVER
+        TYPE(c_ptr), VALUE :: COSWDIF
+        REAL, VALUE :: CITHRSH
+        REAL, VALUE :: EPSMIN
+        REAL, VALUE :: FLMIN
+        INTEGER(KIND=c_int), VALUE :: NANG
+        INTEGER(KIND=c_int), VALUE :: NFRE
+        INTEGER(KIND=c_int), VALUE :: ICHNK
+        INTEGER(KIND=c_int), VALUE :: NCHNK
+        INTEGER(KIND=c_int), VALUE :: IJ
+      END SUBROUTINE SETICE_iso_c
+    END INTERFACE
+    REAL(KIND=JWRB), TARGET, INTENT(INOUT) :: FL1(:, :, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: CICOVER(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: COSWDIF(:, :)
+!$acc host_data use_device( FL1, CICOVER, COSWDIF )
+    CALL SETICE_iso_c(KIJS, KIJL, c_loc(FL1), c_loc(CICOVER), c_loc(COSWDIF), CITHRSH, EPSMIN, FLMIN, NANG, NFRE, ICHNK, NCHNK,  &
+    & IJ)
+!$acc end host_data
+  END SUBROUTINE SETICE_fc
+END MODULE SETICE_FC_MOD

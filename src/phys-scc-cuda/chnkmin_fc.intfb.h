@@ -1,0 +1,15 @@
+INTERFACE
+  SUBROUTINE CHNKMIN_FC (U10, ALPHA, ALPHAMIN, CHNKMIN_U)
+    USE PARKIND_WAVE, ONLY: JWRU, JWIM, JWRB
+    
+    ! ----------------------------------------------------------------------
+    
+    IMPLICIT NONE
+    
+    REAL(KIND=JWRB), INTENT(IN) :: U10
+    REAL(KIND=JWRB), INTENT(IN) :: ALPHA
+    REAL(KIND=JWRB), INTENT(IN) :: ALPHAMIN
+    REAL(KIND=JWRB), INTENT(IN) :: CHNKMIN_U
+!$acc routine seq
+  END SUBROUTINE CHNKMIN_FC
+END INTERFACE

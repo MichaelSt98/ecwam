@@ -1,0 +1,72 @@
+MODULE PEAK_ANG_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE PEAK_ANG_fc (KIJS, KIJL, FL1, XNU, SIG_TH, COSTH, DELTH, DFIM, DFIMFR, DFIMFR2, FR, FRATIO, NANG, NFRE, SINTH, TH,  &
+  & WETAIL, WP1TAIL, WP2TAIL, ICHNK, NCHNK, IJ)
+    USE iso_c_binding, ONLY: c_loc
+    USE PARKIND_WAVE, ONLY: JWIM, JWRB
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    IMPLICIT NONE
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: DELTH
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: FRATIO
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NANG
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: WETAIL
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: WP1TAIL
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: WP2TAIL
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER, VALUE, INTENT(IN) :: NCHNK
+    INTERFACE
+      SUBROUTINE PEAK_ANG_iso_c (KIJS, KIJL, FL1, XNU, SIG_TH, COSTH, DELTH, DFIM, DFIMFR, DFIMFR2, FR, FRATIO, NANG, NFRE,  &
+      & SINTH, TH, WETAIL, WP1TAIL, WP2TAIL, ICHNK, NCHNK, IJ) BIND(c, name="peak_ang_c_launch")
+        USE iso_c_binding, ONLY: c_int, c_ptr
+        implicit none
+        INTEGER(KIND=c_int), VALUE :: KIJS
+        INTEGER(KIND=c_int), VALUE :: KIJL
+        TYPE(c_ptr), VALUE :: FL1
+        TYPE(c_ptr), VALUE :: XNU
+        TYPE(c_ptr), VALUE :: SIG_TH
+        TYPE(c_ptr), VALUE :: COSTH
+        REAL, VALUE :: DELTH
+        TYPE(c_ptr), VALUE :: DFIM
+        TYPE(c_ptr), VALUE :: DFIMFR
+        TYPE(c_ptr), VALUE :: DFIMFR2
+        TYPE(c_ptr), VALUE :: FR
+        REAL, VALUE :: FRATIO
+        INTEGER(KIND=c_int), VALUE :: NANG
+        INTEGER(KIND=c_int), VALUE :: NFRE
+        TYPE(c_ptr), VALUE :: SINTH
+        TYPE(c_ptr), VALUE :: TH
+        REAL, VALUE :: WETAIL
+        REAL, VALUE :: WP1TAIL
+        REAL, VALUE :: WP2TAIL
+        INTEGER(KIND=c_int), VALUE :: ICHNK
+        INTEGER(KIND=c_int), VALUE :: NCHNK
+        INTEGER(KIND=c_int), VALUE :: IJ
+      END SUBROUTINE PEAK_ANG_iso_c
+    END INTERFACE
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: FL1(:, :, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: XNU(:)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: SIG_TH(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: COSTH(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DFIM(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DFIMFR(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DFIMFR2(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: FR(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: SINTH(:)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: TH(:)
+!$acc host_data use_device( FL1, XNU, SIG_TH, COSTH, DFIM, DFIMFR, DFIMFR2, FR, SINTH, TH )
+    CALL PEAK_ANG_iso_c(KIJS, KIJL, c_loc(FL1), c_loc(XNU), c_loc(SIG_TH), c_loc(COSTH), DELTH, c_loc(DFIM), c_loc(DFIMFR),  &
+    & c_loc(DFIMFR2), c_loc(FR), FRATIO, NANG, NFRE, c_loc(SINTH), c_loc(TH), WETAIL, WP1TAIL, WP2TAIL, ICHNK, NCHNK, IJ)
+!$acc end host_data
+  END SUBROUTINE PEAK_ANG_fc
+END MODULE PEAK_ANG_FC_MOD

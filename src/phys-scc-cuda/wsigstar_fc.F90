@@ -1,0 +1,57 @@
+MODULE WSIGSTAR_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE WSIGSTAR_fc (WSWAVE, UFRIC, Z0M, WSTAR, SIG_N, ACDLIN, ALPHAMAX, ALPHAMIN, BCDLIN, EPSUS, G, LLGCBZ0, RNUM, WSPMIN,  &
+  & XKAPPA)
+    USE PARKIND_WAVE, ONLY: JWRB
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    
+    IMPLICIT NONE
+    
+    REAL(KIND=JWRB), INTENT(IN) :: WSWAVE, UFRIC, Z0M, WSTAR
+    REAL(KIND=JWRB), INTENT(OUT) :: SIG_N
+    
+    
+    
+    ! $ loki routine seq
+    REAL(KIND=JWRB), INTENT(IN) :: ACDLIN
+    REAL(KIND=JWRB), INTENT(IN) :: ALPHAMAX
+    REAL(KIND=JWRB), INTENT(IN) :: ALPHAMIN
+    REAL(KIND=JWRB), INTENT(IN) :: BCDLIN
+    REAL(KIND=JWRB), INTENT(IN) :: EPSUS
+    REAL(KIND=JWRB), INTENT(IN) :: G
+    LOGICAL, INTENT(IN) :: LLGCBZ0
+    REAL(KIND=JWRB), INTENT(IN) :: RNUM
+    REAL(KIND=JWRB), INTENT(IN) :: WSPMIN
+    REAL(KIND=JWRB), INTENT(IN) :: XKAPPA
+!$acc routine seq
+    INTERFACE
+      SUBROUTINE WSIGSTAR_iso_c (WSWAVE, UFRIC, Z0M, WSTAR, SIG_N, ACDLIN, ALPHAMAX, ALPHAMIN, BCDLIN, EPSUS, G, LLGCBZ0, RNUM,  &
+      & WSPMIN, XKAPPA) BIND(c, name="wsigstar_c_launch")
+        implicit none
+        REAL, VALUE :: WSWAVE
+        REAL, VALUE :: UFRIC
+        REAL, VALUE :: Z0M
+        REAL, VALUE :: WSTAR
+        REAL :: SIG_N
+        REAL, VALUE :: ACDLIN
+        REAL, VALUE :: ALPHAMAX
+        REAL, VALUE :: ALPHAMIN
+        REAL, VALUE :: BCDLIN
+        REAL, VALUE :: EPSUS
+        REAL, VALUE :: G
+        LOGICAL, VALUE :: LLGCBZ0
+        REAL, VALUE :: RNUM
+        REAL, VALUE :: WSPMIN
+        REAL, VALUE :: XKAPPA
+      END SUBROUTINE WSIGSTAR_iso_c
+    END INTERFACE
+!$acc host_data use_device
+    CALL WSIGSTAR_iso_c(WSWAVE, UFRIC, Z0M, WSTAR, SIG_N, ACDLIN, ALPHAMAX, ALPHAMIN, BCDLIN, EPSUS, G, LLGCBZ0, RNUM, WSPMIN,  &
+    & XKAPPA)
+!$acc end host_data
+  END SUBROUTINE WSIGSTAR_fc
+END MODULE WSIGSTAR_FC_MOD
