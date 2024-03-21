@@ -1,0 +1,182 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+MODULE AIRSEA_CUF_HOIST_NEW_MOD
+  CONTAINS
+  ATTRIBUTES(DEVICE) SUBROUTINE AIRSEA_CUF_HOIST_NEW (KIJS, KIJL, HALP, U10, U10DIR, TAUW, TAUWDIR, RNFAC, US, Z0, Z0B, CHRNCK,  &
+  & ICODE_WND, IUSFG, ACD, ALPHA, ALPHAMAX, ALPHAMIN, ANG_GC_A, ANG_GC_B, ANG_GC_C, BCD, BETAMAXOXKAPPA2, BMAXOKAP,  &
+  & C2OSQRTVG_GC, CDMAX, CHNKMIN_U, CM_GC, DELKCC_GC_NS, DELKCC_OMXKM3_GC, EPS1, EPSMIN, EPSUS, G, GM1, LLCAPCHNK, LLGCBZ0,  &
+  & LLNORMAGAM, NWAV_GC, OM3GMKM_GC, OMXKM3_GC, RN1_RN, RNU, RNUM, SQRTGOSURFT, WSPMIN, XKAPPA, XKMSQRTVGOC2_GC, XKM_GC, XK_GC,  &
+  & XLOGKRATIOM1_GC, XNLEV, ZALP, ICHNK, NCHNK, IJ)
+    
+    ! ----------------------------------------------------------------------
+    
+    !**** *AIRSEA* - DETERMINE TOTAL STRESS IN SURFACE LAYER.
+    
+    !     P.A.E.M. JANSSEN    KNMI      AUGUST    1990
+    !     JEAN BIDLOT         ECMWF     FEBRUARY 1999 : TAUT is already
+    !                                                   SQRT(TAUT)
+    !     JEAN BIDLOT         ECMWF     OCTOBER 2004: QUADRATIC STEP FOR
+    !                                                 TAUW
+    
+    !*    PURPOSE.
+    !     --------
+    
+    !       COMPUTE TOTAL STRESS.
+    
+    !**   INTERFACE.
+    !     ----------
+    
+    !       *CALL* *AIRSEA (KIJS, KIJL, FL1, WAVNUM,
+    !                       HALP, U10, U10DIR, TAUW, TAUWDIR, RNFAC,
+    !                       US, Z0, Z0B, CHRNCK, ICODE_WND, IUSFG)*
+    
+    !          *KIJS*    - INDEX OF FIRST GRIDPOINT.
+    !          *KIJL*    - INDEX OF LAST GRIDPOINT.
+    !          *FL1*     - SPECTRA
+    !          *WAVNUM*  - WAVE NUMBER
+    !          *HALP*    - 1/2 PHILLIPS PARAMETER
+    !          *U10*     - WINDSPEED U10.
+    !          *U10DIR*  - WINDSPEED DIRECTION.
+    !          *TAUW*    - WAVE STRESS.
+    !          *TAUWDIR* - WAVE STRESS DIRECTION.
+    !          *RNFAC*   - WIND DEPENDENT FACTOR USED IN THE GROWTH RENORMALISATION.
+    !          *US*      - OUTPUT OR OUTPUT BLOCK OF FRICTION VELOCITY.
+    !          *Z0*      - OUTPUT BLOCK OF ROUGHNESS LENGTH.
+    !          *Z0B*     - BACKGROUND ROUGHNESS LENGTH.
+    !          *CHRNCK*  - CHARNOCK COEFFICIENT
+    !          *ICODE_WND* SPECIFIES WHICH OF U10 OR US HAS BEEN FILED UPDATED:
+    !                     U10: ICODE_WND=3 --> US will be updated
+    !                     US:  ICODE_WND=1 OR 2 --> U10 will be updated
+    !          *IUSFG*   - IF = 1 THEN USE THE FRICTION VELOCITY (US) AS FIRST GUESS in TAUT_Z0
+    !                           0 DO NOT USE THE FIELD US
+    
+    
+    ! ----------------------------------------------------------------------
+    
+    USE Z0WAVE_CUF_HOIST_NEW_MOD, ONLY: Z0WAVE_CUF_HOIST_NEW
+    USE TAUT_Z0_CUF_HOIST_NEW_MOD, ONLY: TAUT_Z0_CUF_HOIST_NEW
+    USE cudafor
+    USE PARKIND_WAVE, ONLY: JWIM, JWRU, JWRB
+    
+    USE YOWPARAM, ONLY: NFRE, NANG
+    USE YOWTEST, ONLY: IU06
+    
+    
+    ! ----------------------------------------------------------------------
+    IMPLICIT NONE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICODE_WND
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IUSFG
+    REAL(KIND=JWRB), INTENT(IN) :: HALP(KIJL)
+    REAL(KIND=JWRB), INTENT(IN) :: RNFAC(KIJL)
+    REAL(KIND=JWRB), INTENT(IN) :: U10DIR(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: TAUW(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: TAUWDIR(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(INOUT) :: U10(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(INOUT) :: US(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(OUT) :: Z0(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(OUT) :: Z0B(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(OUT) :: CHRNCK(KIJL, NCHNK)
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    INTEGER(KIND=JWIM) :: I
+    INTEGER(KIND=JWIM) :: J
+    
+    REAL(KIND=JWRB) :: XI
+    REAL(KIND=JWRB) :: XJ
+    REAL(KIND=JWRB) :: DELI1
+    REAL(KIND=JWRB) :: DELI2
+    REAL(KIND=JWRB) :: DELJ1
+    REAL(KIND=JWRB) :: DELJ2
+    REAL(KIND=JWRB) :: UST2
+    REAL(KIND=JWRB) :: ARG
+    REAL(KIND=JWRB) :: SQRTCDM1
+    REAL(KIND=JWRB) :: XKAPPAD
+    REAL(KIND=JWRB) :: XLOGLEV
+    REAL(KIND=JWRB) :: XLEV
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ACD
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ALPHA
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ALPHAMAX
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ALPHAMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ANG_GC_A
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ANG_GC_B
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ANG_GC_C
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: BCD
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: BETAMAXOXKAPPA2
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: BMAXOKAP
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: C2OSQRTVG_GC(NWAV_GC)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CDMAX
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CHNKMIN_U
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: CM_GC(NWAV_GC)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: DELKCC_GC_NS(NWAV_GC)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: DELKCC_OMXKM3_GC(NWAV_GC)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPS1
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPSMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPSUS
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: G
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: GM1
+    LOGICAL, VALUE, INTENT(IN) :: LLCAPCHNK
+    LOGICAL, VALUE, INTENT(IN) :: LLGCBZ0
+    LOGICAL, VALUE, INTENT(IN) :: LLNORMAGAM
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NWAV_GC
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: OM3GMKM_GC(NWAV_GC)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: OMXKM3_GC(NWAV_GC)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: RN1_RN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: RNU
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: RNUM
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: SQRTGOSURFT
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: WSPMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: XKAPPA
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: XKMSQRTVGOC2_GC(NWAV_GC)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: XKM_GC(NWAV_GC)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: XK_GC(NWAV_GC)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: XLOGKRATIOM1_GC
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: XNLEV
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ZALP
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER, VALUE, INTENT(IN) :: NCHNK
+    
+    ! ----------------------------------------------------------------------
+    
+    !*    2. DETERMINE TOTAL STRESS (if needed)
+    !        ----------------------------------
+    
+    IF (ICODE_WND == 3) THEN
+      
+      CALL TAUT_Z0_CUF_HOIST_NEW(KIJS, KIJL, IUSFG, HALP(:), U10(:, :), U10DIR(:, :), TAUW(:, :), TAUWDIR(:, :), RNFAC(:),  &
+      & US(:, :), Z0(:, :), Z0B(:, :), CHRNCK(:, :), ACD, ALPHA, ALPHAMAX, ALPHAMIN, ANG_GC_A, ANG_GC_B, ANG_GC_C, BCD,  &
+      & BETAMAXOXKAPPA2, BMAXOKAP, C2OSQRTVG_GC(:), CDMAX, CHNKMIN_U, CM_GC(:), DELKCC_GC_NS(:), DELKCC_OMXKM3_GC(:), EPS1,  &
+      & EPSMIN, EPSUS, G, GM1, LLCAPCHNK, LLGCBZ0, LLNORMAGAM, NWAV_GC, OM3GMKM_GC(:), OMXKM3_GC(:), RN1_RN, RNU, RNUM,  &
+      & SQRTGOSURFT, XKAPPA, XKMSQRTVGOC2_GC(:), XKM_GC(:), XK_GC(:), XLOGKRATIOM1_GC, XNLEV, ZALP, ICHNK, NCHNK, IJ)
+      
+    ELSE IF (ICODE_WND == 1 .or. ICODE_WND == 2) THEN
+      
+      !*    3. DETERMINE ROUGHNESS LENGTH (if needed).
+      !        ---------------------------
+      
+      CALL Z0WAVE_CUF_HOIST_NEW(KIJS, KIJL, US(:, :), TAUW(:, :), U10(:, :), Z0(:, :), Z0B(:, :), CHRNCK(:, :), ALPHA, ALPHAMIN,  &
+      & CHNKMIN_U, EPS1, G, GM1, LLCAPCHNK, ICHNK, NCHNK, IJ)
+      
+      !*    3. DETERMINE U10 (if needed).
+      !        ---------------------------
+      
+      XKAPPAD = 1.0_JWRB / XKAPPA
+      XLOGLEV = LOG(XNLEV)
+      
+      
+      U10(IJ, ICHNK) = XKAPPAD*US(IJ, ICHNK)*(XLOGLEV - LOG(Z0(IJ, ICHNK)))
+      U10(IJ, ICHNK) = MAX(U10(IJ, ICHNK), WSPMIN)
+      
+      
+    END IF
+    
+    
+  END SUBROUTINE AIRSEA_CUF_HOIST_NEW
+END MODULE AIRSEA_CUF_HOIST_NEW_MOD

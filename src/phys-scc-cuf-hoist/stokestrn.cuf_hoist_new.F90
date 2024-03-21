@@ -1,0 +1,126 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+MODULE STOKESTRN_CUF_HOIST_NEW_MOD
+  CONTAINS
+  ATTRIBUTES(DEVICE) SUBROUTINE STOKESTRN_CUF_HOIST_NEW (KIJS, KIJL, FL1, WAVNUM, STOKFAC, DEPTH, WSWAVE, WDWAVE, CICOVER,  &
+  & CITHICK, USTOKES, VSTOKES, STRNMS, NEMOUSTOKES, NEMOVSTOKES, NEMOSTRN, CITHRSH, COSTH, DELTH, DFIM, DFIM_SIM, FLMIN, FR, G,  &
+  & LICERUN, LWAMRSETCI, LWCOU, LWNEMOCOU, LWNEMOCOUSEND, LWNEMOCOUSTK, LWNEMOCOUSTRN, NANG, NFRE, NFRE_ODD, ROWATER, SINTH,  &
+  & ZPI, ICHNK, NCHNK, IJ)
+    
+    ! ----------------------------------------------------------------------
+    
+    !**** *STOKESTRN* - WRAPPER TO CALL STOKESDRIFT and CIMSSTRN
+    
+    !*    PURPOSE.
+    !     --------
+    
+    !**   INTERFACE.
+    !     ----------
+    
+    !       *CALL* *STOKESTRN (KIJS, KIJL, FL1, WAVNUM, STOKFAC, DEPTH, FF_NOW, INTFLDS, WAM2NEMO)
+    
+    !          *KIJS*    - INDEX OF FIRST GRIDPOINT.
+    !          *KIJL*    - INDEX OF LAST GRIDPOINT.
+    !          *FL1*     - SPECTRUM(INPUT).
+    !          *WAVNUM*  - WAVE NUMBER.
+    !          *STOKFAC* - STOKES DRIFT FACTOR.
+    !          *DEPTH*   - WATER DEPTH.
+    !          *FF_NOW*  - FORCING FIELDS AT CURRENT TIME.
+    !          *INTFLDS* - INTEGRATED/DERIVED PARAMETERS
+    !          *WAM2NEMO*- WAVE FIELDS PASSED TO NEMO
+    
+    ! ----------------------------------------------------------------------
+    
+    USE STOKESDRIFT_CUF_HOIST_NEW_MOD, ONLY: STOKESDRIFT_CUF_HOIST_NEW
+    USE CIMSSTRN_CUF_HOIST_NEW_MOD, ONLY: CIMSSTRN_CUF_HOIST_NEW
+    USE cudafor
+    USE PARKIND_WAVE, ONLY: JWIM, JWRU, JWRO, JWRB
+    USE YOWDRVTYPE, ONLY: INTGT_PARAM_FIELDS, FORCING_FIELDS, WAVE2OCEAN
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    
+    IMPLICIT NONE
+    INTEGER(KIND=JWIM), PARAMETER :: NANG_loki_param = 24
+    INTEGER(KIND=JWIM), PARAMETER :: NFRE_loki_param = 36
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    REAL(KIND=JWRB), INTENT(IN) :: FL1(KIJL, NANG_loki_param, NFRE_loki_param, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: WAVNUM(KIJL, NFRE_loki_param, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: STOKFAC(KIJL, NFRE_loki_param, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: DEPTH(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: WSWAVE(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: WDWAVE(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: CICOVER(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(IN) :: CITHICK(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(INOUT) :: USTOKES(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(INOUT) :: VSTOKES(KIJL, NCHNK)
+    REAL(KIND=JWRB), INTENT(INOUT) :: STRNMS(KIJL, NCHNK)
+    REAL(KIND=JWRO), INTENT(INOUT) :: NEMOUSTOKES(KIJL, NCHNK)
+    REAL(KIND=JWRO), INTENT(INOUT) :: NEMOVSTOKES(KIJL, NCHNK)
+    REAL(KIND=JWRO), INTENT(INOUT) :: NEMOSTRN(KIJL, NCHNK)
+    
+    
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CITHRSH
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: COSTH(NFRE_loki_param)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: DELTH
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: DFIM(NFRE_loki_param)
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: DFIM_SIM(NFRE_loki_param)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: FLMIN
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: FR(NFRE_loki_param)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: G
+    LOGICAL, VALUE, INTENT(IN) :: LICERUN
+    LOGICAL, VALUE, INTENT(IN) :: LWAMRSETCI
+    LOGICAL, VALUE, INTENT(IN) :: LWCOU
+    LOGICAL, VALUE, INTENT(IN) :: LWNEMOCOU
+    LOGICAL, VALUE, INTENT(IN) :: LWNEMOCOUSEND
+    LOGICAL, VALUE, INTENT(IN) :: LWNEMOCOUSTK
+    LOGICAL, VALUE, INTENT(IN) :: LWNEMOCOUSTRN
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NANG
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE_ODD
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ROWATER
+    REAL(KIND=JWRB), INTENT(IN), DEVICE :: SINTH(NFRE_loki_param)
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ZPI
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER, VALUE, INTENT(IN) :: NCHNK
+    
+    ! ----------------------------------------------------------------------
+    
+    
+    CALL STOKESDRIFT_CUF_HOIST_NEW(KIJS, KIJL, FL1(:, :, :, :), STOKFAC(:, :, :), WSWAVE(:, :), WDWAVE(:, :), CICOVER(:, :),  &
+    & USTOKES(:, :), VSTOKES(:, :), CITHRSH, COSTH(:), DELTH, DFIM_SIM(:), FR(:), G, LICERUN, LWAMRSETCI, NANG, NFRE_ODD,  &
+    & SINTH(:), ZPI, ICHNK, NCHNK, IJ)
+    
+    IF (LWNEMOCOUSTRN) CALL CIMSSTRN_CUF_HOIST_NEW(KIJS, KIJL, FL1(:, :, :, :), WAVNUM(:, :, :), DEPTH(:, :), CITHICK(:, :), STRNMS(:, :), DELTH,  &
+    & DFIM(:), FLMIN, G, NANG, NFRE, ROWATER, ICHNK, NCHNK, IJ)
+    
+    
+    
+    IF (LWNEMOCOU .and. (LWNEMOCOUSEND .and. LWCOU .or. .not.LWCOU)) THEN
+      IF (LWNEMOCOUSTK) THEN
+        NEMOUSTOKES(IJ, ICHNK) = USTOKES(IJ, ICHNK)
+        NEMOVSTOKES(IJ, ICHNK) = VSTOKES(IJ, ICHNK)
+      ELSE
+        NEMOUSTOKES(IJ, ICHNK) = 0.0_JWRO
+        NEMOVSTOKES(IJ, ICHNK) = 0.0_JWRO
+      END IF
+      
+      IF (LWNEMOCOUSTRN) NEMOSTRN(IJ, ICHNK) = STRNMS(IJ, ICHNK)
+    END IF
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    
+  END SUBROUTINE STOKESTRN_CUF_HOIST_NEW
+END MODULE STOKESTRN_CUF_HOIST_NEW_MOD
