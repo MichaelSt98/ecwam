@@ -77,7 +77,7 @@ CONTAINS
       REAL(KIND=JWRB), PARAMETER :: P1 = 1.48_JWRB
       REAL(KIND=JWRB), PARAMETER :: P2 = -0.21_JWRB
 
-      !$loki routine seq
+      ! $ loki routine seq
       REAL(KIND=JWRB) :: ZCHAR, C_D, DC_DDU, SIG_CONV
       REAL(KIND=JWRB) :: XKAPPAD, U10, C2U10P1, U10P2
       REAL(KIND=JWRB) :: BCD, U10M1, ZN, Z0VIS
@@ -87,6 +87,8 @@ CONTAINS
 ! ----------------------------------------------------------------------
 
       IF (LHOOK) CALL DR_HOOK('WSIGSTAR',0,ZHOOK_HANDLE)
+
+      !$loki routine seq
 
       IF (LLGCBZ0) THEN
         ZN = RNUM

@@ -153,8 +153,11 @@
 !     NDIKCUMUL is the  integer difference in frequency bands
       INTEGER(KIND=JWIM) :: NDIKCUMUL
 
+      !$loki dimension(NANG,NSDSNTH*2+1)
       INTEGER(KIND=JWIM), ALLOCATABLE :: INDICESSAT(:,:)
+      !$loki dimension(NANG,NSDSNTH*2+1)
       REAL(KIND=JWRB), ALLOCATABLE :: SATWEIGHTS(:,:)
+      !$loki dimension(NDEPTH,0:NANG/2,NFRE,NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: CUMULW(:,:,:,:)
 ! ----------------------------------------------------------------------
       END MODULE YOWPHYS

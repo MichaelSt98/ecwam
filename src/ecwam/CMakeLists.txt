@@ -349,7 +349,8 @@ list(APPEND phys_srcs
      z0wave.F90
 )
 
-if( HAVE_GEN_DERIV_TYPES )
+# if( HAVE_GEN_DERIV_TYPES )
+if (TRUE)
    list( APPEND ecwam_srcs ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90)
    add_custom_command(
        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90
@@ -419,6 +420,7 @@ endif()
 # copies of module global variables
 set( LIBRARY_TYPE SHARED )
 if( HAVE_ACC )
+   # if (TRUE)
   set( LIBRARY_TYPE STATIC )
 endif()
 
@@ -670,31 +672,32 @@ if( HAVE_WAM_LOKI )
   endif()
 endif()
 if( HAVE_CUDA )
+if( HAVE_WAM_LOKI )
 ############################################################
-##  Loki SCC transformation:                              ##
+##  Loki CUF-HOIST transformation:                        ##
 ############################################################
      foreach(src ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods})
         string(REPLACE ".F90" "" fnc ${src})
-        string(CONCAT fnm "loki-cuf/" ${fnc} ".cuf_hoist_new.F90")
-        list(APPEND loki_cuf_srcs ${fnm})
+        string(CONCAT fnm "loki-cuf-hoisted/" ${fnc} ".cuf_hoist_new.F90")
+        list(APPEND loki_cuf_hoisted_srcs ${fnm})
      endforeach()
 
-     set_source_files_properties( ${loki_cuf_srcs} PROPERTIES COMPILE_OPTIONS "-Mcuda=maxregcount:128 -Minfo=accel" )
+     set_source_files_properties( ${loki_cuf_hoisted_srcs} PROPERTIES COMPILE_OPTIONS "-Mcuda=maxregcount:128 -Minfo=accel" )
 
      loki_transform_convert(
          MODE cuf-hoist-new FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
          CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
          PATH ${CMAKE_CURRENT_SOURCE_DIR}
          INCLUDES ${ecwam_intfb_includes}
-         OUTPATH ${CMAKE_CURRENT_BINARY_DIR}/loki-cuf
-         OUTPUT ${loki_cuf_srcs}
+         OUTPATH ${CMAKE_CURRENT_BINARY_DIR}/loki-cuf-hoisted
+         OUTPUT ${loki_cuf_hoisted_srcs}
          DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}
      )
 
      ecbuild_add_library(
-        TARGET           ${ecwam}_cuf
+        TARGET           ${ecwam}_cuf_hoisted
         TYPE             ${LIBRARY_TYPE}
-        SOURCES          ${ecwam_srcs} ${loki_cuf_srcs} ${phys_srcs}
+        SOURCES          ${ecwam_srcs} ${loki_cuf_hoisted_srcs} ${phys_srcs}
         PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
                                          ${MPI_Fortran_LIBRARIES}
                                          ${${PNAME}_OCEANMODEL_LIBRARIES}
@@ -710,21 +713,24 @@ if( HAVE_CUDA )
      )
 
      ecwam_target_fortran_module_directory(
-        TARGET ${ecwam}_cuf
-        MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}_cuf
-        INSTALL_DIRECTORY module/${ecwam}_cuf
+        TARGET ${ecwam}_cuf_hoisted
+        MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}_cuf_hoisted
+        INSTALL_DIRECTORY module/${ecwam}_cuf_hoisted
      )
 
-     ecwam_target_compile_definitions_FILENAME( ${ecwam}_cuf )
+     ecwam_target_compile_definitions_FILENAME( ${ecwam}_cuf_hoisted )
 
-     target_link_options( ${ecwam}_cuf PUBLIC "-cuda;-gpu=pinned" )
+     target_link_options( ${ecwam}_cuf_hoisted PUBLIC "-cuda;-gpu=pinned" )
 
      # if( CMAKE_Fortran_COMPILER_ID MATCHES PGI|NVHPC AND HAVE_ACC )
      #    target_compile_options( ${ecwam}_cuf PUBLIC "-gpu=gvmode,maxregcount:128" )
      # endif()
+
+endif()
 ############################################################
 ##  SCC-cuf variant with parametrised temporaries:        ##
 ############################################################
+if (TRUE)
   foreach(src ${phys_srcs} wamintgr_cuda_mod.F90 ${global_var_mods})
      string(REPLACE ".F90" "" fnc ${src})
      string(CONCAT fnm "../phys-scc-cuf/" ${fnc} ".cuf_parametrise.F90")
@@ -761,3 +767,106 @@ if( HAVE_CUDA )
 
   target_link_options( ${ecwam}_scc_cuf PUBLIC "-cuda;-gpu=pinned" )
 endif()
+############################################################
+##  SCC-cuf variant with parametrised temporaries:        ##
+############################################################
+
+if (TRUE)
+  foreach(src ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "../phys-scc-cuf-hoist/" ${fnc} ".cuf_hoist_new.F90")
+     list(APPEND wam_scc_cuf_hoist_srcs ${fnm})
+  endforeach()
+
+  set_source_files_properties( ${wam_scc_cuf_hoist_srcs} PROPERTIES COMPILE_OPTIONS "-Mcuda=maxregcount:128" )
+
+  ecbuild_add_library(
+        TARGET           ${ecwam}_scc_cuf_hoist
+        TYPE             ${LIBRARY_TYPE}
+	DEFINITIONS      ${ECWAM_DEFINITIONS} WAM_CUDA WAM_CUDA_C
+        SOURCES          ${ecwam_srcs} ${wam_scc_cuf_hoist_srcs} ${phys_srcs}
+        PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
+                                         ${MPI_Fortran_LIBRARIES}
+                                         ${${PNAME}_OCEANMODEL_LIBRARIES}
+                     $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
+        PRIVATE_LIBS     eccodes_f90
+                                         ${MULTIO_LIBRARIES}
+                                         ${OpenMP_Fortran_LIBRARIES}
+                                         $<${HAVE_FIELD_API}:field_api_${prec}>
+                                         MPI::MPI_Fortran
+        PUBLIC_INCLUDES  $<INSTALL_INTERFACE:include>
+        PRIVATE_INCLUDES ${${PNAME}_OCEANMODEL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+  ecwam_target_fortran_module_directory(
+        TARGET ${ecwam}_scc_cuf_hoist
+        MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}_scc_cuf_hoist
+        INSTALL_DIRECTORY module/${ecwam}_scc_cuf_hoist
+  )
+
+  ecwam_target_compile_definitions_FILENAME( ${ecwam}_scc_cuf_hoist )
+
+  target_link_options( ${ecwam}_scc_cuf_hoist PUBLIC "-cuda;-gpu=pinned" )
+endif()
+
+############################################################
+############################################################
+##  SCC-CUDA hoisted temporaries, mostly generated via Loki#
+##   but minor manual fixes/adaptations ...               ##
+############################################################
+if (TRUE)
+# foreach(src ${phys_srcs} wamintgr_cuda_mod.F90 ${global_var_mods})
+  foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "../phys-scc-cuda/" ${fnc} "_c.c")
+     list(APPEND wam_scc_cuda_srcs ${fnm})
+  endforeach()
+
+  foreach(src ${global_var_mods} wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "../phys-scc-cuda/" ${fnc} ".c_hoist.F90")
+     list(APPEND wam_scc_cuda_srcs_2 ${fnm})
+  endforeach()
+
+  ecbuild_add_library(
+        TARGET           ${ecwam}_scc_cuda
+        TYPE             ${LIBRARY_TYPE}
+	DEFINITIONS      ${ECWAM_DEFINITIONS} WAM_CUDA WAM_CUDA_C
+	SOURCES          ${ecwam_srcs} ${wam_scc_cuda_srcs} ${phys_srcs} ${wam_scc_cuda_srcs_2} ../phys-scc-cuda/implsch_fc.F90 # ${global_var_mods} ../phys-scc-cuda/wamintgr_loki_gpu.c_hoist.F90 
+        PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
+                                         ${MPI_Fortran_LIBRARIES}
+                                         ${${PNAME}_OCEANMODEL_LIBRARIES}
+                     $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
+        PRIVATE_LIBS     eccodes_f90
+                                         ${MULTIO_LIBRARIES}
+                                         ${OpenMP_Fortran_LIBRARIES}
+                                         $<${HAVE_FIELD_API}:field_api_${prec}>
+                                         MPI::MPI_Fortran
+        PUBLIC_INCLUDES  $<INSTALL_INTERFACE:include>
+        PRIVATE_INCLUDES ${${PNAME}_OCEANMODEL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+  
+  set_source_files_properties( ${wam_scc_cuda_srcs} PROPERTIES LANGUAGE CUDA )
+
+  # set_source_files_properties(${phys_srcs} ${global_var_mods} ../phys-scc-cuda/wamintgr_loki_gpu.c_hoist.F90 FLAGS "-cuda")
+  set(CMAKE_CUDA_ARCHITECTURES 80)
+  target_compile_options(${ecwam}_scc_cuda PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
+	  # -keep -DDEBUG -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}> --shared --compiler-options -fPIC)
+	  # -rdc=true -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+	  --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+
+  # set_target_properties( ${ecwam}_scc_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON) 
+
+  ecwam_target_fortran_module_directory(
+        TARGET ${ecwam}_scc_cuda
+        MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}_scc_cuda
+        INSTALL_DIRECTORY module/${ecwam}_scc_cuda
+  )
+
+  ecwam_target_compile_definitions_FILENAME( ${ecwam}_scc_cuda )
+
+  target_link_options( ${ecwam}_scc_cuda PUBLIC "-cuda;-gpu=pinned;-lcudadevrt" )
+endif()
+
+endif()
+

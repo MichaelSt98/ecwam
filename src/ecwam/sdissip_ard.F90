@@ -70,6 +70,7 @@
 &                  BRKPBCOEF ,SSDSC5, NSDSNTH, NDIKCUMUL,              &
 &                  INDICESSAT, SATWEIGHTS, CUMULW
 
+      USE YOWSHAL, ONLY: NDEPTH
       USE YOMHOOK  , ONLY : LHOOK   ,DR_HOOK, JPHOOK
 
 ! ----------------------------------------------------------------------
@@ -98,13 +99,14 @@
       REAL(KIND=JWRB), DIMENSION(KIJL,NANG_PARAM) :: SCUMUL, D 
 
       REAL(KIND=JWRB), DIMENSION(KIJL) :: RENEWALFREQ
-
+      INTEGER :: FOO
 ! ----------------------------------------------------------------------
 
       IF (LHOOK) CALL DR_HOOK('SDISSIP_ARD',0,ZHOOK_HANDLE)
 
       ! INITIALISATION
 
+      FOO = NDEPTH ! necessary for Loki ...
       EPSR = SQRT(SDSBR)
 
       TPIINV = 1.0_JWRB/ZPI

@@ -86,7 +86,8 @@ SUBROUTINE WAMODEL (NADV, LDSTOP, LDWRRE, BLK2GLO,             &
       USE WAM_MULTIO_MOD, ONLY : WAM_MULTIO_FLUSH
       USE YOMHOOK  , ONLY : LHOOK,   DR_HOOK, JPHOOK
 
-#ifdef WAM_CUDA
+! # ifdef WAM_CUDA 
+#if defined(WAM_CUDA) && !defined(WAM_CUDA_C)
       USE WAMINTGR_CUDA_MOD, ONLY : WAMINTGR_CUF
 #endif
       
@@ -114,7 +115,8 @@ SUBROUTINE WAMODEL (NADV, LDSTOP, LDWRRE, BLK2GLO,             &
 #include "updnemostress.intfb.h"
 #include "writsta.intfb.h"
 
-#ifdef WAM_PHYS_GPU
+! # ifdef WAM_PHYS_GPU
+#if defined(WAM_PHYS_GPU) || defined(WAM_CUDA_C)
 #include "wamintgr_loki_gpu.intfb.h"
 #elif !defined(WAM_CUDA)
 #include "wamintgr.intfb.h"
@@ -256,7 +258,12 @@ IF (LHOOK) CALL DR_HOOK('WAMODEL',0,ZHOOK_HANDLE)
         CDATEWH = CDATEWO
         ILOOP = 1
         DO WHILE ( ILOOP == 1 .OR. CDTIMPNEXT <= CDTPRO)
-#ifdef WAM_PHYS_GPU
+#ifdef WAM_PHYS_GPU 
+          CALL WAMINTGR_LOKI_GPU(CDTPRA, CDATE, CDATEWH, CDTIMP, CDTIMPNEXT, &
+ &                       BLK2GLO,                                    &
+ &                       WVENVI, WVPRPT, FF_NOW, FF_NEXT, INTFLDS,   &
+ &                       WAM2NEMO, MIJ, FL1, XLLWS, TIME1)
+#elif defined(WAM_CUDA_C)
           CALL WAMINTGR_LOKI_GPU(CDTPRA, CDATE, CDATEWH, CDTIMP, CDTIMPNEXT, &
  &                       BLK2GLO,                                    &
  &                       WVENVI, WVPRPT, FF_NOW, FF_NEXT, INTFLDS,   &

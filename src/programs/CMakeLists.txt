@@ -59,19 +59,40 @@ if( HAVE_CUDA )
 
 if( HAVE_WAM_LOKI )
     ecbuild_add_executable(
-	TARGET          ${PROJECT_NAME}-chief-loki-scc-cuf
+	TARGET          ${PROJECT_NAME}-chief-loki-scc-cuf-hoisted
 	SOURCES         chief.F90
-	LIBS            ${PROJECT_NAME}_cuf ${OpenMP_Fortran_LIBRARIES}
+	LIBS            ${PROJECT_NAME}_cuf_hoisted ${OpenMP_Fortran_LIBRARIES}
     )
-    ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-loki-scc-cuf)
+    ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-loki-scc-cuf-hoisted)
 endif()
-
+if (TRUE)
     ecbuild_add_executable(
         TARGET          ${PROJECT_NAME}-chief-scc-cuf
         SOURCES         chief.F90
         LIBS            ${PROJECT_NAME}_scc_cuf ${OpenMP_Fortran_LIBRARIES}
     )
     ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-scc-cuf)
+endif()
+if (TRUE)
+    ecbuild_add_executable(
+        TARGET          ${PROJECT_NAME}-chief-scc-cuf-hoist
+        SOURCES         chief.F90
+        LIBS            ${PROJECT_NAME}_scc_cuf_hoist ${OpenMP_Fortran_LIBRARIES}
+    )
+    ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-scc-cuf-hoist)
+endif()
+    ##
+    ecbuild_add_executable(
+        TARGET          ${PROJECT_NAME}-chief-scc-cuda
+        SOURCES         chief.F90
+        LIBS            ${PROJECT_NAME}_scc_cuda ${OpenMP_Fortran_LIBRARIES}
+    )
+    ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-chief-scc-cuda)
+    set_target_properties(${PROJECT_NAME}-chief-scc-cuda PROPERTIES LINKER_LANGUAGE Fortran)
+    target_link_libraries(${PROJECT_NAME}-chief-scc-cuda cudadevrt cudart)
+    # target_link_options(${PROJECT_NAME}-chief-scc-cuda PRIVATE "-cuda")
+    ##
+
 endif()
 
 string( TOUPPER ${PROJECT_NAME} PNAME )
