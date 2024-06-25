@@ -151,7 +151,10 @@
 !     NSDSNTH is the number of directions on both used to compute the spectral saturation  
       INTEGER(KIND=JWIM) :: NSDSNTH
 
+      !$loki dimension(NANG,NSDSNTH*2+1)
       INTEGER(KIND=JWIM), ALLOCATABLE :: INDICESSAT(:,:)
+
+      !$loki dimension(NANG,NSDSNTH*2+1)
       REAL(KIND=JWRB), ALLOCATABLE :: SATWEIGHTS(:,:)
 ! ----------------------------------------------------------------------
       END MODULE YOWPHYS

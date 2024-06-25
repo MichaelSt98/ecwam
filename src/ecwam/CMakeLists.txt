@@ -365,7 +365,8 @@ if(HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack")
   list(REMOVE_ITEM ecwam_srcs wamintgr.F90)
 endif()
 
-if( HAVE_GEN_DERIV_TYPES )
+# if( HAVE_GEN_DERIV_TYPES )
+if (TRUE)
    list( APPEND ecwam_srcs ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90)
    add_custom_command(
        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90

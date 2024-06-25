@@ -19,29 +19,52 @@
 
 !*    ** *FREDIR* - FREQUENCY AND DIRECTION GRID.
 
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: FR(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: RHOWG_DFIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIM_SIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMOFR(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMOFR_SIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIM_END_L(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIM_END_U(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR_SIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR2(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR2_SIM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: GOM(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: C(:)
       REAL(KIND=JWRB)              :: DELTH
+      REAL(KIND=JWRB)              :: DELTR
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: TH(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: COSTH(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: SINTH(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: ZPIFR(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: FR5(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: FRM5(:)
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: COFRM4(:)
 
+      !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: FLMAX(:)
 
       TYPE(FREQUENCY_LAND)  :: WVPRPT_LAND
@@ -64,18 +87,31 @@
       REAL(KIND=JWRB), PARAMETER   :: XKS_GC = 0.006_JWRB
       REAL(KIND=JWRB), PARAMETER   :: XKL_GC = 20000.0_JWRB
 
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: XK_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: XKM_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: OMEGA_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: OMXKM3_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: VG_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: C_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: CM_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: C2OSQRTVG_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: XKMSQRTVGOC2_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: OM3GMKM_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_GC(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_GC_NS(:)
+      !$loki dimension(NWAV_GC)
       REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_OMXKM3_GC(:)
 
       REAL(KIND=JWRB), PARAMETER   :: FRIC = 28.0_JWRB
@@ -84,8 +120,6 @@
 
 !*     VARIABLE.   TYPE.     PURPOSE.
 !      ---------   -------   --------
-!      *IFRE1*     INTEGER   INDEX OF THE REFERENCE FREQUENCY IN THE FREQUENCY ARRAYS
-!      *FR1*       REAL      VALUE OF THE REFERENCE FREQUENCY (Hz)
 !      *FR*        REAL      FREQUENCIES IN HERTZ.
 !      *DFIM*      REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL.
 !                            FOR TRAPEZOIDAL RULE
@@ -107,6 +141,7 @@
 !      *GOM*       REAL      DEEP WATER GROUP VELOCITIES (M/S).
 !      *C*         REAL      DEEP WATER PHASE VELOCITIES (M/S).
 !      *DELTH*     REAL      ANGULAR INCREMENT OF SPECTRUM (RADIANS).
+!      *DELTR*     REAL      DELTH TIMES RADIUS OF EARTH (METRES).
 !      *TH*        REAL      DIRECTIONS IN RADIANS.
 !      *COSTH*     REAL      COS OF DIRECTION.
 !      *SINTH*     REAL      SIN OF DIRECTION.
