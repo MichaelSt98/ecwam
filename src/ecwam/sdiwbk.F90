@@ -95,7 +95,7 @@
                EXPQ = EXP(-ARG*(1.0_JWRB-Q_OLD))
                Q = Q_OLD - (EXPQ-Q_OLD)/(ARG*EXPQ-1.0_JWRB)
                REL_ERR=ABS(Q-Q_OLD)/Q_OLD
-               IF(REL_ERR.LT.0.00001_JWRB) EXIT
+               ! IF(REL_ERR.LT.0.00001_JWRB) EXIT
                Q_OLD = Q
              ENDDO
              Q=MIN(Q,1.0_JWRB)

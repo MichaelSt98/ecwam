@@ -215,7 +215,7 @@ IF (LLGCBZ0) THEN
 
 !         CONVERGENCE ?
           DEL = USTAR(IJ)-USTOLD
-          IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT 
+          ! IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT 
           TAUOLD = USTAR(IJ)**2
           USTOLD = USTAR(IJ)
         ENDDO
@@ -265,7 +265,7 @@ IF (LLGCBZ0) THEN
 !           CONVERGENCE ?
             DEL = USTAR(IJ)-USTOLD
 
-            IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT 
+            ! IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT 
             USTOLD = USTAR(IJ)
             TAUOLD = MAX(USTOLD**2,TAUWEFF(IJ))
           ENDDO
@@ -332,7 +332,7 @@ ELSE
           IF (DELF /= 0.0_JWRB) USTAR(IJ) = USTAR(IJ)-F/DELF
           TAUNEW = MAX(USTAR(IJ)**2,TAUWEFF(IJ))
           USTAR(IJ) = SQRT(TAUNEW)
-          IF (TAUNEW == TAUOLD) EXIT
+          ! IF (TAUNEW == TAUOLD) EXIT
           USTM1 = 1.0_JWRB/MAX(USTAR(IJ),EPSUS)
           TAUOLD = TAUNEW
         ENDDO

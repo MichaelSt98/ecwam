@@ -358,6 +358,313 @@ list( APPEND ecwam_srcs
   z0wave.F90
 )
 
+list( APPEND ecwam_srcs_old
+  abort1.F90
+  adjust.F90
+  aki.F90
+  alphap_tail.F90
+  bouinpt.F90
+  buildstress.F90
+  cal_second_order_spec.F90
+  cdustarz0.F90
+  check.F90
+  checkcfl.F90
+  chkoops.F90
+  cigetdeac.F90
+  cireduce.F90
+  ciwaf.F90
+  ctuw.F90
+  ctuwdrv.F90
+  ctuwini.F90
+  ctuwupdt.F90
+  current2wam.F90
+  difdate.F90
+  dominant_period.F90
+  expand_string.F90
+  femean.F90
+  file_transfer.F90
+  findb.F90
+  fldinter.F90
+  fndprt.F90
+  get_preset_wgrib_template.F90
+  getcurr.F90
+  getfrstwnd.F90
+  getspec.F90
+  getstress.F90
+  getwnd.F90
+  gradi.F90
+  grib2wgrid.F90
+  grstname.F90
+  gsfile_new.F90
+  h_max.F90
+  headbc.F90
+  incdate.F90
+  inisnonlin.F90
+  init_fieldg.F90
+  init_sdiss_ardh.F90
+  init_x0tauhf.F90
+  initdpthflds.F90
+  initgc.F90
+  initialint.F90
+  initmdl.F90
+  initnemocpl.F90
+  iniwcst.F90
+  intpol.F90
+  intspec.F90
+  inwgrib.F90
+  iwam_get_unit.F90
+  jafu.F90
+  jonswap.F90
+  kerkei.F90
+  kgribsize.F90
+  kurtosis.F90
+  kzeone.F90
+  makegrid.F90
+  mblock.F90
+  mbounc.F90
+  mbounf.F90
+  mboxb.F90
+  mchunk.F90
+  mcout.F90
+  means.F90
+  meansqs.F90
+  meansqs_lf.F90
+  mfredir.F90
+  mgrid.F90
+  micep.F90
+  mintf.F90
+  mnintw.F90
+  mpabort.F90
+  mpbcastgrid.F90
+  mpbcastintfld.F90
+  mpclose_unit.F90
+  mpcrtbl.F90
+  mpdecomp.F90
+  mpdistribfl.F90
+  mpdistribscfld.F90
+  mpexchng.F90
+  mpfldtoifs.F90
+  mpgatherbc.F90
+  mpgatherfl.F90
+  mpgatherscfld.F90
+  mpminmaxavg.F90
+  mpuserin.F90
+  mstart.F90
+  mswell.F90
+  # mtabs.F90
+  mubuf.F90
+  mwp1.F90
+  mwp2.F90
+  newwind.F90
+  nlweigt.F90
+  notim.F90
+  out_onegrdpt.F90
+  out_onegrdpt_sp.F90
+  outbc.F90
+  outbeta.F90
+  outblock.F90
+  outbs.F90
+  outcom.F90
+  outgrid.F90
+  outint.F90
+  outmdldcp.F90
+  outnam.F90
+  outpp.F90
+  outsetwmask.F90
+  outspec.F90
+  outstep0.F90
+  outwint.F90
+  outwnorm.F90
+  outwpsp.F90
+  outwspec.F90
+  packi.F90
+  packr.F90
+  parkind_wave.F90
+  parmean.F90
+  peak.F90
+  peak_freq.F90
+  peakfri.F90
+  preset_wgrib_template.F90
+  prewind.F90
+  proenvhalo.F90
+  propag_wam.F90
+  propags.F90
+  propags1.F90
+  propags2.F90
+  propdot.F90
+  readbou.F90
+  readfl.F90
+  readpre.F90
+  readsta.F90
+  readstress.F90
+  readwgrib.F90
+  readwind.F90
+  recvnemofields.F90
+  rotspec.F90
+  runwam.F90
+  savspec.F90
+  savstress.F90
+  scosfl.F90
+  se10mean.F90
+  sebtmean.F90
+  second_order_lib.F90
+  secondhh.F90
+  secondhh_gen.F90
+  secspom.F90
+  semean.F90
+  sep3tr.F90
+  sepwisw.F90
+  set_wflags.F90
+  setmarstype.F90
+  setwavphys.F90
+  skewness.F90
+  spectra.F90
+  spr.F90
+  # stack_mod.F90
+  stat_nl.F90
+  sthq.F90
+  strspec.F90
+  tables_2nd.F90
+  tabu_swellft.F90
+  topoar.F90
+  transf_bfi.F90
+  transf_r.F90
+  uibou.F90
+  uiprep.F90
+  unsetice.F90
+  updnemofields.F90
+  updnemostress.F90
+  userin.F90
+  vmin.F90
+  vmin_d.F90
+  vplus.F90
+  vplus_d.F90
+  w_maxh.F90
+  w_mode_st.F90
+  wam_init_gpu_mod.F90
+  wam_multio_mod.F90
+  wam_nproma.F90
+  wam_sorti.F90
+  wam_sortini.F90
+  wam_u2l1cr.F90
+  wam_user_clock.F90
+  wamadswstar.F90
+  wamcur.F90
+  wamodel.F90
+  wamwnd.F90
+  wavemdl.F90
+  wdfluxes.F90
+  wdirspread.F90
+  weflux.F90
+  wgrib2fdb.F90
+  wgribencode.F90
+  wgribencode_model.F90
+  wgribenout.F90
+  wgribout.F90
+  wposnam.F90
+  writefl.F90
+  writestress.F90
+  writsta.F90
+  wsmfen.F90
+  wstream_strg.F90
+  wvalloc.F90
+  wvdealloc.F90
+  wvfricvelo.F90
+  wvwamdecomp.F90
+  wvwaminit.F90
+  wvwaminit1.F90
+  yowabort.F90
+  yowassi.F90
+  yowcard.F90
+  yowcinp.F90
+  yowcoer.F90
+  yowconst_2nd.F90
+  yowcpbo.F90
+  yowcurg.F90
+  yowcurr.F90
+  yowdes.F90
+  yowdrvtype.F90
+  yowfpbo.F90
+  yowgrib.F90
+  yowgrib_handles.F90
+  yowgribhd.F90
+  yowgrid.F90
+  yowgstats.F90
+  yowintp.F90
+  yowjons.F90
+  yowmap.F90
+  yowmean.F90
+  yowmespas.F90
+  yowmpp.F90
+  yownemoflds.F90
+  yownemoio.F90
+  yowprproc.F90
+  yowrefd.F90
+  yowshal.F90
+  yowspec.F90
+  yowsphere.F90
+  yowtemp.F90
+  yowtest.F90
+  yowtext.F90
+  yowtrains.F90
+  yowubuf.F90
+  yowunit.F90
+  yowwami.F90
+)
+
+list(APPEND global_var_mods
+     yowaltas.F90
+     yowcoup.F90
+     yowcout.F90
+     yowfred.F90
+     yowice.F90
+     yowindn.F90
+     yowparam.F90
+     yowpcons.F90
+     yowphys.F90
+     yowstat.F90
+     yowtabl.F90
+     yowwind.F90
+     yowwndg.F90
+     # yownemoio.F90
+)
+list(APPEND phys_srcs
+     airsea.F90
+     aki_ice.F90
+     chnkmin.F90
+     cimsstrn.F90
+     ciwabr.F90
+     femeanws.F90
+     fkmean.F90
+     frcutindex.F90
+     halphap.F90
+     imphftail.F90
+     implsch.F90
+     ns_gc.F90
+     peak_ang.F90
+     sbottom.F90
+     sdepthlim.F90
+     sdissip.F90
+     sdissip_ard.F90
+     sdissip_jan.F90
+     sdiwbk.F90
+     setice.F90
+     sinflx.F90
+     sinput.F90
+     sinput_ard.F90
+     snonlin.F90
+     stokesdrift.F90
+     stokestrn.F90
+     stress_gc.F90
+     stresso.F90
+     tau_phi_hf.F90
+     taut_z0.F90
+     transf.F90
+     transf_snl.F90
+     wnfluxes.F90
+     z0wave.F90
+)
+
 # Loki GPU transformations must use the alternate driver-layer with the FIELD_API
 # offload instructions
 if(HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack")
@@ -446,10 +753,18 @@ if( HAVE_ACC )
   set( LIBRARY_TYPE STATIC )
 endif()
 
+foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "${CMAKE_CURRENT_SOURCE_DIR}/" ${fnc} "_c.c")
+     list(APPEND wam_scc_cuda_srcs ${fnm})
+endforeach()
+
+
+if (FALSE)
 ecbuild_add_library(
     TARGET           ${ecwam}
     TYPE             ${LIBRARY_TYPE}
-    SOURCES          ${ecwam_srcs}
+    SOURCES          ${ecwam_srcs_old} ${wam_scc_cuda_srcs} ${phys_srcs}
     PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
                      ${MPI_Fortran_LIBRARIES}
                      ${${PNAME}_OCEANMODEL_LIBRARIES}
@@ -465,17 +780,26 @@ ecbuild_add_library(
     PUBLIC_DEFINITIONS ${ECWAM_DEFINITIONS}
 )
 
+set_source_files_properties( ${wam_scc_cuda_srcs} PROPERTIES LANGUAGE CUDA )
+
+set(CMAKE_CUDA_ARCHITECTURES 80)
+target_compile_options(${ecwam} PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
+	  --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+
 ecwam_target_fortran_module_directory(
     TARGET ${ecwam}
     MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}
     INSTALL_DIRECTORY module/${ecwam}
 )
 
-if( HAVE_ACC )
-   target_compile_options( ${ecwam} PUBLIC "-gpu=gvmode,maxregcount:128" )
-endif()
+# if( HAVE_ACC )
+#    target_compile_options( ${ecwam} PUBLIC "-gpu=gvmode,maxregcount:128" )
+# endif()
 
 ecwam_target_compile_definitions_FILENAME( ${ecwam} )
+
+target_link_options( ${ecwam} PUBLIC "-cuda;-gpu=pinned;-lcudadevrt" )
+endif()
 
 ### The file mubuf.F90, which is only used for "preproc" is sensitive to optimisations
 #   possibly leading to different wam_grid_<1,2,3> files.
@@ -515,23 +839,106 @@ if( HAVE_LOKI )
      set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki.config )
   else()
      set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config )
-     target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
+     # target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
      set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
   endif()
 
   # Apply Loki source file transformation to lib target
-  loki_transform_target( TARGET ${ecwam}
-    MODE ${LOKI_MODE}
-    DIRECTIVE openacc
-    FRONTEND ${LOKI_FRONTEND}
-    CONFIG ${LOKI_CONFIG_FILE}
-    PLAN ${CMAKE_CURRENT_BINARY_DIR}/loki_plan_ecwam.cmake
-    ${SCC_ARGS}
-    CPP
-    DEFINITIONS WAM_GPU
-    INCLUDES ${ecwam_intfb_includes}
-    SOURCES
-      ${CMAKE_CURRENT_SOURCE_DIR}/
-  )
+  # loki_transform_target( TARGET ${ecwam}
+  #   MODE ${LOKI_MODE}
+  #   DIRECTIVE openacc
+  #   FRONTEND ${LOKI_FRONTEND}
+  #   CONFIG ${LOKI_CONFIG_FILE}
+  #   PLAN ${CMAKE_CURRENT_BINARY_DIR}/loki_plan_ecwam.cmake
+  #   ${SCC_ARGS}
+  #   CPP
+  #   DEFINITIONS WAM_GPU
+  #   INCLUDES ${ecwam_intfb_includes}
+  #   SOURCES
+  #     ${CMAKE_CURRENT_SOURCE_DIR}/
+  # )
+
+  foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} "_c.c")
+     list(APPEND loki_wam_scc_cuda_srcs ${fnm})
+  endforeach()
+
+  # foreach(src ${global_var_mods} wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})
+  foreach(src wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     string(REPLACE ".F90" "" fnc ${src})
+     string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} ".c_hoist.F90")
+     list(APPEND loki_wam_scc_cuda_srcs_2 ${fnm})
+  endforeach()
+
+    loki_transform(
+	 COMMAND convert
+         MODE cuda-hoist FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
+         CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
+	 SOURCES ${CMAKE_CURRENT_SOURCE_DIR}
+         INCLUDES ${ecwam_intfb_includes}
+         BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist
+	 OUTPUT ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90
+	 DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}# ${ecwam}
+	 # DEPENDS ${ecwam}
+     )
+
+enable_language(CUDA)
+enable_language(CXX)
+
+ecbuild_add_library(
+    TARGET           ${ecwam}
+    TYPE             ${LIBRARY_TYPE}
+    SOURCES          ${ecwam_srcs_old} ${global_var_mods} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
+                     ${MPI_Fortran_LIBRARIES}
+                     ${${PNAME}_OCEANMODEL_LIBRARIES}
+    PRIVATE_LIBS     eccodes_f90
+                     ${MULTIO_LIBRARIES}
+                     ${OpenMP_Fortran_LIBRARIES}
+                     field_api_${prec}
+                     $<${HAVE_ECFLOW}:ecflow_lightf>
+                     $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
+    PUBLIC_INCLUDES  $<INSTALL_INTERFACE:include>
+    PRIVATE_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE_DEFINITIONS ${ECWAM_PRIVATE_DEFINITIONS}
+    PUBLIC_DEFINITIONS ${ECWAM_DEFINITIONS}
+)
+
+  if( LOKI_MODE MATCHES "idem|idem-stack" )
+	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki.config )
+  else()
+	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config )
+     target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
+     # set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
+  endif()
+
+set_source_files_properties( ${loki_wam_scc_cuda_srcs} PROPERTIES LANGUAGE CUDA )
+
+
+set(CMAKE_CUDA_ARCHITECTURES 80)
+
+target_include_directories(
+	${ecwam}
+        PUBLIC
+        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+)
+
+target_compile_options(${ecwam} PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
+          --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+
+ecwam_target_fortran_module_directory(
+    TARGET ${ecwam}
+    MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/module/${ecwam}
+    INSTALL_DIRECTORY module/${ecwam}
+)
+
+# if( HAVE_ACC )
+#    target_compile_options( ${ecwam} PUBLIC "-gpu=gvmode,maxregcount:128" )
+# endif()
+
+ecwam_target_compile_definitions_FILENAME( ${ecwam} )
+
+target_link_options( ${ecwam} PUBLIC "-cuda;-gpu=pinned;-lcudadevrt" )
 
 endif()
