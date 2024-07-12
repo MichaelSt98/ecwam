@@ -135,7 +135,8 @@ endif()
 ecbuild_add_option( FEATURE ACC
                     DESCRIPTION "OpenACC" DEFAULT OFF
                     REQUIRED_PACKAGES "OpenACC" 
-                    CONDITION HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack" AND HAVE_GEN_DERIV_TYPES )
+		    # CONDITION HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack" AND HAVE_GEN_DERIV_TYPES )
+		    CONDITION HAVE_GEN_DERIV_TYPES)
 
 ### CUDA-aware MPI
 ecbuild_add_option( FEATURE GPU_AWARE_MPI

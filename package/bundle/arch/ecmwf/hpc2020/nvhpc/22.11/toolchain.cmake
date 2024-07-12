@@ -32,9 +32,27 @@ endif()
 # COMMON FLAGS
 ####################################################################
 
+# set(ECBUILD_Fortran_FLAGS "-fpic")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -r8")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mframe")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mbyteswapio")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mstack_arrays")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mrecursive")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Ktrap=fp")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Kieee")
+# set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mdaz")
+
+# set( ECBUILD_Fortran_FLAGS_BIT "-O2 -gopt" )
+
+# Enable this to get more detailed compiler output
+# set( ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Minfo=inline,accel" )
+
+# set(ECBUILD_Fortran_FLAGS "-O2 -g -Mframe")
 set(ECBUILD_Fortran_FLAGS "-Mframe")
 set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mbyteswapio")
 set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mstack_arrays")
 set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mrecursive")
 set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Kieee")
 set(ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Mdaz")
+
+set( ECBUILD_Fortran_FLAGS "${ECBUILD_Fortran_FLAGS} -Minfo=inline,accel" )

@@ -359,6 +359,16 @@ list( APPEND ecwam_srcs
 )
 
 list( APPEND ecwam_srcs_old
+  readmdlconf.F90
+  mfr.F90
+  propconnect.F90
+  wsigstar.F90
+  omegagc.F90
+  sinput_jan.F90
+  wgrib_edition.F90
+  meansqs_gc.F90
+  ctcor.F90
+  wamintgr.F90
   abort1.F90
   adjust.F90
   aki.F90
@@ -380,6 +390,7 @@ list( APPEND ecwam_srcs_old
   current2wam.F90
   difdate.F90
   dominant_period.F90
+  depthprpt.F90
   expand_string.F90
   femean.F90
   file_transfer.F90
@@ -652,6 +663,8 @@ list(APPEND phys_srcs
      sinflx.F90
      sinput.F90
      sinput_ard.F90
+     # new
+     sinput_jan.F90
      snonlin.F90
      stokesdrift.F90
      stokestrn.F90
@@ -663,6 +676,12 @@ list(APPEND phys_srcs
      transf_snl.F90
      wnfluxes.F90
      z0wave.F90
+     # new ...
+     omegagc.F90
+     meansqs_lf.F90
+     femean.F90
+     semean.F90
+     wsigstar.F90
 )
 
 # Loki GPU transformations must use the alternate driver-layer with the FIELD_API
@@ -670,11 +689,13 @@ list(APPEND phys_srcs
 if(HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack")
   list(APPEND ecwam_srcs wamintgr_loki_gpu.F90)
   list(REMOVE_ITEM ecwam_srcs wamintgr.F90)
+  list(REMOVE_ITEM ecwam_srcs_old wamintgr.F90)
 endif()
 
 # if( HAVE_GEN_DERIV_TYPES )
 if (TRUE)
    list( APPEND ecwam_srcs ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90)
+   list( APPEND ecwam_srcs_old ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90)
    add_custom_command(
        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/yowfield_mod.F90
        COMMAND ${FYPP} -m io -m yaml -m os ${CMAKE_CURRENT_SOURCE_DIR}/yowfield_mod.fypp > yowfield_mod.F90
@@ -749,7 +770,8 @@ endif()
 # Using dynamic linking creates undefined references to the device
 # copies of module global variables
 set( LIBRARY_TYPE SHARED )
-if( HAVE_ACC )
+# if( HAVE_ACC )
+if (TRUE)
   set( LIBRARY_TYPE STATIC )
 endif()
 
@@ -830,6 +852,7 @@ if( CMAKE_Fortran_COMPILER_ID MATCHES Intel AND HAVE_SINGLE_PRECISION )
   set_source_files_properties( grib2wgrid.F90 PROPERTIES COMPILE_OPTIONS "-fp-model;strict" )
 endif()
 
+
 if( HAVE_LOKI )
 
   set( LOKI_FRONTEND "fp" CACHE STRING "Frontend parser for Loki source transformations" )
@@ -842,6 +865,20 @@ if( HAVE_LOKI )
      # target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
      set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
   endif()
+
+# if (TRUE)
+# if( HAVE_LOKI )
+
+# set( LOKI_FRONTEND "fp" CACHE STRING "Frontend parser for Loki source transformations" )
+#  set( SCC_ARGS "")
+
+#  if( LOKI_MODE MATCHES "idem|idem-stack" )
+#     set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki.config )
+#  else()
+#     set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config )
+     # target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
+     #     set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
+     # endif()
 
   # Apply Loki source file transformation to lib target
   # loki_transform_target( TARGET ${ecwam}
@@ -858,30 +895,52 @@ if( HAVE_LOKI )
   #     ${CMAKE_CURRENT_SOURCE_DIR}/
   # )
 
+  # list(APPEND ecwam_srcs wamintgr_loki_gpu.F90)
+  list(REMOVE_ITEM ecwam_srcs wamintgr.F90)
+  list(REMOVE_ITEM ecwam_srcs_old wamintgr.F90)
+
   foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
      string(REPLACE ".F90" "" fnc ${src})
      string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} "_c.c")
+     # string(CONCAT fnm "../cuda-ecwam-3/" ${fnc} "_c.c")
+     ## string(CONCAT fnm "../cuda-ecwam-1-small-testcase/" ${fnc} "_c.c")
+     ## string(CONCAT fnm "../phys-scc-cuda/" ${fnc} "_c.c")
      list(APPEND loki_wam_scc_cuda_srcs ${fnm})
   endforeach()
 
   # foreach(src ${global_var_mods} wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})
-  foreach(src wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})
+  foreach(src wamintgr_loki_gpu.F90 ${global_var_mods}) # wamintgr_cuda_mod.F90 ${global_var_mods})
      string(REPLACE ".F90" "" fnc ${src})
-     string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} ".c_hoist.F90")
+     string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} ".cuda_hoist.F90")
+     # string(CONCAT fnm "../cuda-ecwam-3/" ${fnc} ".cuda_hoist.F90")
+     ## string(CONCAT fnm "../cuda-ecwam-1-small-testcase/" ${fnc} ".cuda_hoist.F90")
+     ## string(CONCAT fnm "../phys-scc-cuda/" ${fnc} ".c_hoist.F90")
      list(APPEND loki_wam_scc_cuda_srcs_2 ${fnm})
   endforeach()
 
-    loki_transform(
-	 COMMAND convert
-         MODE cuda-hoist FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
-         CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
-	 SOURCES ${CMAKE_CURRENT_SOURCE_DIR}
-         INCLUDES ${ecwam_intfb_includes}
-         BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist
-	 OUTPUT ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90
-	 DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}# ${ecwam}
-	 # DEPENDS ${ecwam}
-     )
+  # loki_transform(
+  #	 COMMAND convert
+  #       MODE cuda-hoist FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
+  #       CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
+  #    	 SOURCES ${CMAKE_CURRENT_SOURCE_DIR}
+  #        INCLUDES ${ecwam_intfb_includes}
+  #        BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist
+  # 	 OUTPUT ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90
+  # 	 DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}# ${ecwam}
+  #	 # DEPENDS ${ecwam}
+  #    )
+  
+  # loki_transform(
+  #        COMMAND convert
+  #        MODE cuda-hoist FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
+  #        CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
+  #        SOURCES ${CMAKE_CURRENT_SOURCE_DIR}
+  #        INCLUDES ${ecwam_intfb_includes}
+  #        BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist
+  #        OUTPUT ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90
+  #        DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}# ${ecwam}
+  #        # DEPENDS ${ecwam}
+  #  )
 
 enable_language(CUDA)
 enable_language(CXX)
@@ -889,7 +948,11 @@ enable_language(CXX)
 ecbuild_add_library(
     TARGET           ${ecwam}
     TYPE             ${LIBRARY_TYPE}
-    SOURCES          ${ecwam_srcs_old} ${global_var_mods} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    SOURCES          ${ecwam_srcs_old} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    ## SOURCES          ${ecwam_srcs} ${global_var_mods} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ../cuda-ecwam-1/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    # SOURCES          ${ecwam_srcs_old} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ../cuda-ecwam-3/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    ## SOURCES          ${ecwam_srcs_old} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ../cuda-ecwam-1-small-testcase/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
+    ## SOURCES          ${ecwam_srcs} ${global_var_mods} ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ../phys-scc-cuda/implsch_fc.F90 ${phys_srcs} # ${wam_scc_cuda_srcs} ${phys_srcs}
     PUBLIC_LIBS      fiat parkind_${prec} ${ecwam}_intfb
                      ${MPI_Fortran_LIBRARIES}
                      ${${PNAME}_OCEANMODEL_LIBRARIES}
@@ -905,13 +968,20 @@ ecbuild_add_library(
     PUBLIC_DEFINITIONS ${ECWAM_DEFINITIONS}
 )
 
-  if( LOKI_MODE MATCHES "idem|idem-stack" )
-	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki.config )
-  else()
-	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config )
-     target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
-     # set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
-  endif()
+target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
+
+# foreach(src ${loki_wam_scc_cuda_srcs})
+#   set_source_files_properties( src PROPERTIES COMPILE_OPTIONS "-g -G -O0" )
+# endforeach()
+
+
+  # if( LOKI_MODE MATCHES "idem|idem-stack" )
+  # 	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki.config )
+  # else()
+  # 	  # set( LOKI_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config )
+  #    target_compile_definitions( ${ecwam} PRIVATE WAM_GPU )
+  #    # set( SCC_ARGS "TRIM_VECTOR_SECTIONS;GLOBAL_VAR_OFFLOAD")
+  # endif()
 
 set_source_files_properties( ${loki_wam_scc_cuda_srcs} PROPERTIES LANGUAGE CUDA )
 
@@ -925,7 +995,8 @@ target_include_directories(
 )
 
 target_compile_options(${ecwam} PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
-          --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+	# -g -G -O0 --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+	--maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
 
 ecwam_target_fortran_module_directory(
     TARGET ${ecwam}
@@ -940,5 +1011,18 @@ ecwam_target_fortran_module_directory(
 ecwam_target_compile_definitions_FILENAME( ${ecwam} )
 
 target_link_options( ${ecwam} PUBLIC "-cuda;-gpu=pinned;-lcudadevrt" )
+
+
+  loki_transform(
+         COMMAND convert
+         MODE cuda-hoist FRONTEND ${LOKI_FRONTEND} CPP GLOBAL_VAR_OFFLOAD TRIM_VECTOR_SECTIONS
+         CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/ecwam_loki_gpu.config
+         SOURCES ${CMAKE_CURRENT_SOURCE_DIR}
+         INCLUDES ${ecwam_intfb_includes}
+         BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist
+         OUTPUT ${loki_wam_scc_cuda_srcs} ${loki_wam_scc_cuda_srcs_2} ${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/implsch_fc.F90  
+         DEPENDS ${phys_srcs} wamintgr_loki_gpu.F90 ${global_var_mods}# ${ecwam}
+         # DEPENDS ${ecwam}
+   )
 
 endif()
