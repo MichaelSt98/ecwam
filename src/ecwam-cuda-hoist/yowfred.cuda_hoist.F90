@@ -1,0 +1,198 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+MODULE YOWFRED
+  
+  USE PARKIND_WAVE, ONLY: JWIM, JWRB, JWRU
+  USE YOWDRVTYPE, ONLY: FREQUENCY_LAND
+  
+  IMPLICIT NONE
+  
+  INTEGER(KIND=JWIM) :: IFRE1
+  REAL(KIND=JWRB) :: FR1
+  
+  !*    ** *FREDIR* - FREQUENCY AND DIRECTION GRID.
+  
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: FR(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: RHOWG_DFIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIM_SIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMOFR(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMOFR_SIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIM_END_L(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIM_END_U(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR_SIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR2(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: DFIMFR2_SIM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: GOM(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: C(:)
+  REAL(KIND=JWRB) :: DELTH
+  REAL(KIND=JWRB) :: DELTR
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: TH(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: COSTH(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: SINTH(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: ZPIFR(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: FR5(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: FRM5(:)
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: COFRM4(:)
+  
+!$loki dimension( NFRE )
+  REAL(KIND=JWRB), ALLOCATABLE :: FLMAX(:)
+  
+  TYPE(FREQUENCY_LAND) :: WVPRPT_LAND
+  
+  
+  REAL(KIND=JWRB), PARAMETER :: FRATIO = 1.1_JWRB
+  REAL(KIND=JWRB), PARAMETER :: WETAIL = 0.25_JWRB
+  REAL(KIND=JWRB), PARAMETER :: FRTAIL = 0.2_JWRB
+  REAL(KIND=JWRB), PARAMETER :: WP1TAIL = 1.0_JWRB / 3.0_JWRB
+  REAL(KIND=JWRB), PARAMETER :: WP2TAIL = 0.5_JWRB
+  REAL(KIND=JWRB), PARAMETER :: QPTAIL = 2.0_JWRB / 9.0_JWRB
+  REAL(KIND=JWRB), PARAMETER :: COEF4 = 5.0E-07_JWRB
+  
+  
+  REAL(KIND=JWRB) :: XKMSS_CUTOFF
+  
+  INTEGER(KIND=JWIM) :: NWAV_GC
+  REAL(KIND=JWRB), PARAMETER :: KRATIO_GC = 1.2_JWRB
+  REAL(KIND=JWRB), PARAMETER :: XLOGKRATIOM1_GC = 1.0_JWRB / LOG(KRATIO_GC)
+  REAL(KIND=JWRB), PARAMETER :: XKS_GC = 0.006_JWRB
+  REAL(KIND=JWRB), PARAMETER :: XKL_GC = 20000.0_JWRB
+  
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: XK_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: XKM_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: OMEGA_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: OMXKM3_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: VG_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: C_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: CM_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: C2OSQRTVG_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: XKMSQRTVGOC2_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: OM3GMKM_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_GC(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_GC_NS(:)
+!$loki dimension( NWAV_GC )
+  REAL(KIND=JWRB), ALLOCATABLE :: DELKCC_OMXKM3_GC(:)
+  
+  REAL(KIND=JWRB), PARAMETER :: FRIC = 28.0_JWRB
+  REAL(KIND=JWRB), PARAMETER :: OLDWSFC = 1.2_JWRB
+  REAL(KIND=JWRB) :: FLOGSPRDM1
+  
+  !*     VARIABLE.   TYPE.     PURPOSE.
+  !      ---------   -------   --------
+  !      *FR*        REAL      FREQUENCIES IN HERTZ.
+  !      *DFIM*      REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL.
+  !                            FOR TRAPEZOIDAL RULE
+  !      *RHOWG_DFIM*REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL TIMES WATER DENSITY AND G.
+  !      *DFIM_SIM*  REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL.
+  !                            FOR SIMPSON RULE
+  !      *DFIMOFR*   REAL      DFIM/FR
+  !      *DFIMOFR_SIMREAL      DFIM_SIM/FR
+  !      *DFIM_END_L REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL
+  !                            FOR LOWER BOUND FOR TRAPEZOIDAL INTEGRATION  WHERE
+  !                            DFIM IS USED IN BETWEEN DFIM_END_L AND DFIM_END_U
+  !      *DFIM_END_U REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL
+  !                            FOR UPPER BOUND FOR TRAPEZOIDAL INTEGRATION WHERE
+  !                            DFIM IS USED IN BETWEEN DFIM_END_L AND DFIM_END_U
+  !      *DFIMFR*    REAL      DFIM*FR
+  !      *DFIMFR_SIM REAL      DFIM_SIM*FR
+  !      *DFIMFR2*   REAL      DFIM*FR**2
+  !      *DFIMFR2_SIMREAL      DFIM_SIM*FR**2
+  !      *GOM*       REAL      DEEP WATER GROUP VELOCITIES (M/S).
+  !      *C*         REAL      DEEP WATER PHASE VELOCITIES (M/S).
+  !      *DELTH*     REAL      ANGULAR INCREMENT OF SPECTRUM (RADIANS).
+  !      *DELTR*     REAL      DELTH TIMES RADIUS OF EARTH (METRES).
+  !      *TH*        REAL      DIRECTIONS IN RADIANS.
+  !      *COSTH*     REAL      COS OF DIRECTION.
+  !      *SINTH*     REAL      SIN OF DIRECTION.
+  !      *ZPIFR*     REAL      ZPI*FR(M)
+  !      *FR5*       REAL      FR(M)**5
+  !      *FRM5*      REAL      (1./FR(M))**5
+  !      *COFRM4*    REAL      COEF4*G*FR(M)**(-4.)
+  !      *FLMAX*     REAL      MAXIMUM SPECTRAL COMPONENT ALLOWED.
+  !                            (ALPHAPMAX/PI) (G**2/(2PI)**4) FR(M)**-5
+  !                            ALPHAPMAX MAXIMUM PHILLIPS PARAMETER (SEE YOWPHYS).
+  !      *WVPRPT_LAND*         FICTIOUS VALUE FOR LAND POINT (NSUP+1)
+  !      *FRATIO*    REAL      FREQUENCY RATIO.
+  !      *WETAIL*    REAL      WAVE ENERGY TAIL CONSTANT FACTOR.
+  !      *FRTAIL*    REAL      FREQUENCY TAIL CONSTANT FACTOR.
+  !      *WP1TAIL*   REAL      PERIOD 1 TAIL CONSTANT FACTOR.
+  !      *WP2TAIL*   REAL      PERIOD 2 TAIL CONSTANT FACTOR.
+  !      *QPTAIL*    REAL      GODA TAIL CONSTANT FACTOR.
+  !      *COEF4*     REAL      COEFFICIENT USED TO COMPUTE THE SPECTRAL
+  !                            LIMITER IN IMPLSCH.
+  
+  !      *XKMSS_CUTOFF*        IF DIFFERENT FROM 0., SETS THE MAXIMUM WAVE NUMBER TO BE USED IN
+  !                            THE CALCULATION OF THE MEAN SQUARE SLOPE.
+  
+  !      *NWAV_GC*   INTEGER   TOTAL NUMBER OF DISCRETISED WAVE NUMBER OF THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *KRATIO_GC* REAL      WAVE NUMBER RATIO FOR THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *XKS_GC*    REAL      WAVE NUMBER LOWER LIMIT FOR  THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *XKL_GC*    REAL      WAVE NUMBER UPPER LIMIT FOR  THE GRAVITY-CAPILLARY SPECTRUM.
+  
+  !      *XK_GC*               WAVE NUMBER OF THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *XKM_GC*              1 / XK_GC
+  !      *OMEGA_GC*            ANGULAR FREQUENCY OF THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *OMXKM3_GC*           OMEGA_GC *  XKM_GC**3
+  !      *VG_GC*               GROUP VELOCITY OF THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *C_GC*                PHASE VELOCITY OF THE GRAVITY-CAPILLARY SPECTRUM.
+  !      *CM_GC*               1 / C_GC
+  !      *C2OSQRTVG_GC*        C_GC**2/SQRT(VG_GC)
+  !      *XKMSQRTVGOC2_GC*     XKM_GC * SQRT(VG_GC)/C_GC**2
+  !      *OM3GMKM_GC*          OMEGA_GC**3 / (g*XK_GC)
+  !      *DELKCC_GC*           WAVE NUMBER OF THE GRAVITY-CAPILLARY SPECTRUM SPACING / C2OSQRTVG_GC
+  !      *DELKCC_GC_NS*        WAVE NUMBER OF THE GRAVITY-CAPILLARY SPECTRUM SPACING for index NS / C2OSQRTVG_GC
+  !      *DELKCC_OMXKM3_GC*    DELKCC_GC * OMXKM3_GC
+  
+  
+  !      *FRIC*      REAL      COEFFICIENT RELATING THE PIERSON-MOSKOVITCH
+  !                            ANGULAR FREQUENCY OF THE SPECTRAL PEAK
+  !                            TO THE FRICTION VELOCITY:
+  !                            OMEGA_PM=G/(FRIC*USTAR)
+  !      *OLDWSFC*  REAL       OLD WIND SEA FACTOR USED TO DETERMINE THE THRESHOLD
+  !                            FOR WINDSEA/SWELL SEPARATION
+  !      *FLOGSPRDM1* REAL     FLOGSPRDM1=1./LOG10(FRATIO)
+  ! ----------------------------------------------------------------------
+!$acc declare create(  &
+!$acc & OMXKM3_GC,FR5,OMEGA_GC,ZPIFR,DELKCC_GC_NS,COFRM4,DFIM_SIM,FLMAX,DFIMOFR,FR,DELKCC_OMXKM3_GC,FLOGSPRDM1,DFIM,DELTH,SINTH,DFIMFR,C2OSQRTVG_GC,CM_GC,NWAV_GC,TH,COSTH,XKM_GC,XK_GC,DFIMFR2,XKMSQRTVGOC2_GC,OM3GMKM_GC,RHOWG_DFIM &
+!$acc &  )
+END MODULE YOWFRED

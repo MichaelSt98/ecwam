@@ -1,0 +1,55 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+ATTRIBUTES(DEVICE) FUNCTION NS_GC_FC (USTAR, NWAV_GC, SQRTGOSURFT, XKM_GC, XLOGKRATIOM1_GC) RESULT(NS_GC)
+  
+  ! ----------------------------------------------------------------------
+  
+  !**** *NS_GC* - FUNCTION TO DETERMINE THE CUT-OFF ANGULAR FREQUENCY INDEX
+  !               FOR THE GRAVITY-CAPILLARY MODEL
+  !               !!!! rounded to the closest index of XK_GC  !!!!!
+  
+  !**   INTERFACE.
+  !     ----------
+  
+  !       *FUNCTION* *NS_GC (USTAR)*
+  
+  !       *USTAR*  - FRICTION VELOCITY.
+  
+  ! ----------------------------------------------------------------------
+  
+  USE PARKIND_WAVE, ONLY: JWRB, JWIM, JWRU
+  
+  
+  ! ----------------------------------------------------------------------
+  
+  IMPLICIT NONE
+  
+  INTEGER :: NS_GC
+  REAL(KIND=JWRB), VALUE, INTENT(IN) :: USTAR
+  
+  REAL(KIND=JWRB) :: Y
+  REAL(KIND=JWRB) :: XKS
+  INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NWAV_GC
+  REAL(KIND=JWRB), VALUE, INTENT(IN) :: SQRTGOSURFT
+  REAL(KIND=JWRB), TARGET, INTENT(IN) :: XKM_GC(:)
+  REAL(KIND=JWRB), VALUE, INTENT(IN) :: XLOGKRATIOM1_GC
+!$acc routine seq
+  
+  ! ----------------------------------------------------------------------
+  
+  
+  !!!Y = 1.0_JWRB/(1.48_JWRB+2.05_JWRB*UST)
+  !!!Y = (1.0_JWRB + UST**2)/(1.0_JWRB+10.0_JWRB*UST**2)
+  
+  XKS = SQRTGOSURFT / (1.48_JWRB + 2.05_JWRB*USTAR)
+  
+  NS_GC = MIN(INT(LOG(MAX(XKS*XKM_GC(1), 1.0_JWRB))*XLOGKRATIOM1_GC) + 1, NWAV_GC - 1)
+  
+  
+END FUNCTION NS_GC_FC

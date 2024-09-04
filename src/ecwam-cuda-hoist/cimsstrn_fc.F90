@@ -1,0 +1,75 @@
+MODULE CIMSSTRN_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE CIMSSTRN_fc (KIJS, KIJL, FL1, WAVNUM, DEPTH, CITHICK, STRN, DELTH, DFIM, FLMIN, G, NANG, NFRE, ROWATER, ICHNK,  &
+  & NCHNK, IJ, XKI, E, SUME)
+    USE iso_c_binding, ONLY: c_loc
+    USE PARKIND_WAVE, ONLY: JWRB, JWIM
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    
+    IMPLICIT NONE
+    INTERFACE
+      FUNCTION AKI_ICE (G, XK, DEPTH, RHOW, CITH)
+        USE parkind_wave, ONLY: jwrb
+        REAL(KIND=JWRB) :: AKI_ICE
+        REAL(KIND=JWRB), INTENT(IN) :: G, XK, DEPTH, RHOW, CITH
+      END FUNCTION AKI_ICE
+    END INTERFACE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: DELTH
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: FLMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: G
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NANG
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ROWATER
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NCHNK
+    INTERFACE
+      SUBROUTINE CIMSSTRN_iso_c (KIJS, KIJL, FL1, WAVNUM, DEPTH, CITHICK, STRN, DELTH, DFIM, FLMIN, G, NANG, NFRE, ROWATER,  &
+      & ICHNK, NCHNK, IJ, XKI, E, SUME) BIND(c, name="cimsstrn_c_launch")
+        USE iso_c_binding, ONLY: c_int, c_ptr
+        implicit none
+        INTEGER(KIND=c_int), VALUE :: KIJS
+        INTEGER(KIND=c_int), VALUE :: KIJL
+        TYPE(c_ptr), VALUE :: FL1
+        TYPE(c_ptr), VALUE :: WAVNUM
+        TYPE(c_ptr), VALUE :: DEPTH
+        TYPE(c_ptr), VALUE :: CITHICK
+        TYPE(c_ptr), VALUE :: STRN
+        REAL, VALUE :: DELTH
+        TYPE(c_ptr), VALUE :: DFIM
+        REAL, VALUE :: FLMIN
+        REAL, VALUE :: G
+        INTEGER(KIND=c_int), VALUE :: NANG
+        INTEGER(KIND=c_int), VALUE :: NFRE
+        REAL, VALUE :: ROWATER
+        INTEGER(KIND=c_int), VALUE :: ICHNK
+        INTEGER(KIND=c_int), VALUE :: NCHNK
+        INTEGER(KIND=c_int), VALUE :: IJ
+        TYPE(c_ptr), VALUE :: XKI
+        TYPE(c_ptr), VALUE :: E
+        TYPE(c_ptr), VALUE :: SUME
+      END SUBROUTINE CIMSSTRN_iso_c
+    END INTERFACE
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: FL1(:, :, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: WAVNUM(:, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DEPTH(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: CITHICK(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: STRN(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DFIM(:)
+    REAL(KIND=JWRB), TARGET, INTENT(INOUT) :: XKI(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(INOUT) :: E(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(INOUT) :: SUME(:, :)
+!$acc host_data use_device( FL1, WAVNUM, DEPTH, CITHICK, STRN, DFIM, XKI, E, SUME )
+    CALL CIMSSTRN_iso_c(KIJS, KIJL, c_loc(FL1), c_loc(WAVNUM), c_loc(DEPTH), c_loc(CITHICK), c_loc(STRN), DELTH, c_loc(DFIM),  &
+    & FLMIN, G, NANG, NFRE, ROWATER, ICHNK, NCHNK, IJ, c_loc(XKI), c_loc(E), c_loc(SUME))
+!$acc end host_data
+  END SUBROUTINE CIMSSTRN_fc
+END MODULE CIMSSTRN_FC_MOD

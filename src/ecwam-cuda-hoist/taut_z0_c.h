@@ -1,0 +1,23 @@
+
+
+__device__ void taut_z0_c(int kijs, int kijl, int iusfg, 
+  const double * __restrict__ halp, const double * __restrict__ utop, 
+  const double * __restrict__ udir, const double * __restrict__ tauw, 
+  const double * __restrict__ tauwdir, const double * __restrict__ rnfac, 
+  double * __restrict__ ustar, double * __restrict__ z0, double * __restrict__ z0b, 
+  double * __restrict__ chrnck, double acd, double alpha, double alphamax, 
+  double alphamin, double ang_gc_a, double ang_gc_b, double ang_gc_c, double bcd, 
+  double betamaxoxkappa2, double bmaxokap, const double * __restrict__ c2osqrtvg_gc, 
+  double cdmax, double chnkmin_u, const double * __restrict__ cm_gc, 
+  const double * __restrict__ delkcc_gc_ns, 
+  const double * __restrict__ delkcc_omxkm3_gc, double eps1, double epsmin, 
+  double epsus, double g, double gm1, int llcapchnk, int llgcbz0, int llnormagam, 
+  int nwav_gc, const double * __restrict__ om3gmkm_gc, 
+  const double * __restrict__ omxkm3_gc, double rn1_rn, double rnu, double rnum, 
+  double sqrtgosurft, double xkappa, const double * __restrict__ xkmsqrtvgoc2_gc, 
+  const double * __restrict__ xkm_gc, const double * __restrict__ xk_gc, 
+  double xlogkratiom1_gc, double xnlev, double zalp, int ichnk, int nchnk, int ij, 
+  double * __restrict__ alphaog, double * __restrict__ xmin, double * __restrict__ w1, 
+  double * __restrict__ tauwact, double * __restrict__ tauweff, 
+  double * __restrict__ ang_gc, double * __restrict__ tauunr, 
+  int * __restrict__ llcosdiff, double * __restrict__ stress_gc_gam_w);

@@ -1,0 +1,73 @@
+MODULE Z0WAVE_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE Z0WAVE_fc (KIJS, KIJL, US, TAUW, UTOP, Z0, Z0B, CHRNCK, ALPHA, ALPHAMIN, CHNKMIN_U, EPS1, G, GM1, LLCAPCHNK, ICHNK,  &
+  & NCHNK, IJ, ALPHAOG)
+    USE iso_c_binding, ONLY: c_loc
+    USE PARKIND_WAVE, ONLY: JWRB, JWIM
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    
+    IMPLICIT NONE
+    INTERFACE
+      FUNCTION CHNKMIN (U10)
+        USE parkind_wave, ONLY: jwrb
+        REAL(KIND=JWRB) :: CHNKMIN
+        REAL(KIND=JWRB), INTENT(IN) :: U10
+      END FUNCTION CHNKMIN
+    END INTERFACE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ALPHA
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: ALPHAMIN
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CHNKMIN_U
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPS1
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: G
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: GM1
+    LOGICAL, VALUE, INTENT(IN) :: LLCAPCHNK
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NCHNK
+    INTERFACE
+      SUBROUTINE Z0WAVE_iso_c (KIJS, KIJL, US, TAUW, UTOP, Z0, Z0B, CHRNCK, ALPHA, ALPHAMIN, CHNKMIN_U, EPS1, G, GM1, LLCAPCHNK,  &
+      & ICHNK, NCHNK, IJ, ALPHAOG) BIND(c, name="z0wave_c_launch")
+        USE iso_c_binding, ONLY: c_int, c_ptr
+        implicit none
+        INTEGER(KIND=c_int), VALUE :: KIJS
+        INTEGER(KIND=c_int), VALUE :: KIJL
+        TYPE(c_ptr), VALUE :: US
+        TYPE(c_ptr), VALUE :: TAUW
+        TYPE(c_ptr), VALUE :: UTOP
+        TYPE(c_ptr), VALUE :: Z0
+        TYPE(c_ptr), VALUE :: Z0B
+        TYPE(c_ptr), VALUE :: CHRNCK
+        REAL, VALUE :: ALPHA
+        REAL, VALUE :: ALPHAMIN
+        REAL, VALUE :: CHNKMIN_U
+        REAL, VALUE :: EPS1
+        REAL, VALUE :: G
+        REAL, VALUE :: GM1
+        LOGICAL, VALUE :: LLCAPCHNK
+        INTEGER(KIND=c_int), VALUE :: ICHNK
+        INTEGER(KIND=c_int), VALUE :: NCHNK
+        INTEGER(KIND=c_int), VALUE :: IJ
+        TYPE(c_ptr), VALUE :: ALPHAOG
+      END SUBROUTINE Z0WAVE_iso_c
+    END INTERFACE
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: US(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: TAUW(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: UTOP(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: Z0(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: Z0B(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: CHRNCK(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(INOUT) :: ALPHAOG(:, :)
+!$acc host_data use_device( US, TAUW, UTOP, Z0, Z0B, CHRNCK, ALPHAOG )
+    CALL Z0WAVE_iso_c(KIJS, KIJL, c_loc(US), c_loc(TAUW), c_loc(UTOP), c_loc(Z0), c_loc(Z0B), c_loc(CHRNCK), ALPHA, ALPHAMIN,  &
+    & CHNKMIN_U, EPS1, G, GM1, LLCAPCHNK, ICHNK, NCHNK, IJ, c_loc(ALPHAOG))
+!$acc end host_data
+  END SUBROUTINE Z0WAVE_fc
+END MODULE Z0WAVE_FC_MOD

@@ -1,0 +1,64 @@
+MODULE CIWABR_FC_MOD
+  USE iso_c_binding
+  CONTAINS
+  SUBROUTINE CIWABR_fc (KIJS, KIJL, CICOVER, FL1, WAVNUM, CGROUP, CIWAB, CDICWA, DFIM, EPSMIN, IDELT, LICERUN, LMASKICE, NANG,  &
+  & NFRE, ICHNK, NCHNK, IJ)
+    USE iso_c_binding, ONLY: c_loc
+    USE PARKIND_WAVE, ONLY: JWRB, JWIM
+    
+    
+    
+    ! ----------------------------------------------------------------------
+    IMPLICIT NONE
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJS
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: KIJL
+    
+    
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IJ
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: CDICWA
+    REAL(KIND=JWRB), VALUE, INTENT(IN) :: EPSMIN
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: IDELT
+    LOGICAL, VALUE, INTENT(IN) :: LICERUN
+    LOGICAL, VALUE, INTENT(IN) :: LMASKICE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NANG
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NFRE
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: ICHNK
+    INTEGER(KIND=JWIM), VALUE, INTENT(IN) :: NCHNK
+    INTERFACE
+      SUBROUTINE CIWABR_iso_c (KIJS, KIJL, CICOVER, FL1, WAVNUM, CGROUP, CIWAB, CDICWA, DFIM, EPSMIN, IDELT, LICERUN, LMASKICE,  &
+      & NANG, NFRE, ICHNK, NCHNK, IJ) BIND(c, name="ciwabr_c_launch")
+        USE iso_c_binding, ONLY: c_int, c_ptr
+        implicit none
+        INTEGER(KIND=c_int), VALUE :: KIJS
+        INTEGER(KIND=c_int), VALUE :: KIJL
+        TYPE(c_ptr), VALUE :: CICOVER
+        TYPE(c_ptr), VALUE :: FL1
+        TYPE(c_ptr), VALUE :: WAVNUM
+        TYPE(c_ptr), VALUE :: CGROUP
+        TYPE(c_ptr), VALUE :: CIWAB
+        REAL, VALUE :: CDICWA
+        TYPE(c_ptr), VALUE :: DFIM
+        REAL, VALUE :: EPSMIN
+        INTEGER(KIND=c_int), VALUE :: IDELT
+        LOGICAL, VALUE :: LICERUN
+        LOGICAL, VALUE :: LMASKICE
+        INTEGER(KIND=c_int), VALUE :: NANG
+        INTEGER(KIND=c_int), VALUE :: NFRE
+        INTEGER(KIND=c_int), VALUE :: ICHNK
+        INTEGER(KIND=c_int), VALUE :: NCHNK
+        INTEGER(KIND=c_int), VALUE :: IJ
+      END SUBROUTINE CIWABR_iso_c
+    END INTERFACE
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: CICOVER(:, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: FL1(:, :, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: WAVNUM(:, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: CGROUP(:, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(OUT) :: CIWAB(:, :, :)
+    REAL(KIND=JWRB), TARGET, INTENT(IN) :: DFIM(:)
+!$acc host_data use_device( CICOVER, FL1, WAVNUM, CGROUP, CIWAB, DFIM )
+    CALL CIWABR_iso_c(KIJS, KIJL, c_loc(CICOVER), c_loc(FL1), c_loc(WAVNUM), c_loc(CGROUP), c_loc(CIWAB), CDICWA, c_loc(DFIM),  &
+    & EPSMIN, IDELT, LICERUN, LMASKICE, NANG, NFRE, ICHNK, NCHNK, IJ)
+!$acc end host_data
+  END SUBROUTINE CIWABR_fc
+END MODULE CIWABR_FC_MOD
