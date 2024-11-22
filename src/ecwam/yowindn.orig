@@ -22,34 +22,20 @@
       INTEGER(KIND=JWIM)             :: MFRSTLW
       INTEGER(KIND=JWIM)             :: MLSTHG
 
-      !$loki dimension(MFRSTLW:MLSTHG)
       INTEGER(KIND=JWIM), ALLOCATABLE :: IKP(:) 
-      !$loki dimension(MFRSTLW:MLSTHG)
       INTEGER(KIND=JWIM), ALLOCATABLE :: IKP1(:) 
-      !$loki dimension(MFRSTLW:MLSTHG)
       INTEGER(KIND=JWIM), ALLOCATABLE :: IKM(:) 
-      !$loki dimension(MFRSTLW:MLSTHG)
-      INTEGER(KIND=JWIM), ALLOCATABLE :: IKM1(:)
-      !$loki dimension(NANG,2) 
+      INTEGER(KIND=JWIM), ALLOCATABLE :: IKM1(:) 
       INTEGER(KIND=JWIM), ALLOCATABLE :: K1W(:,:) 
-      !$loki dimension(NANG,2)
       INTEGER(KIND=JWIM), ALLOCATABLE :: K2W(:,:) 
-      !$loki dimension(NANG,2)
-      INTEGER(KIND=JWIM), ALLOCATABLE :: K11W(:,:)
-      !$loki dimension(NANG,2)
+      INTEGER(KIND=JWIM), ALLOCATABLE :: K11W(:,:) 
       INTEGER(KIND=JWIM), ALLOCATABLE :: K21W(:,:) 
-      !$loki dimension(NINL,1:MLSTHG)
       INTEGER(KIND=JWIM), ALLOCATABLE :: INLCOEF(:,:)
 
-      !$loki dimension(MFRSTLW:MLSTHG)
-      REAL(KIND=JWRB), ALLOCATABLE :: AF11(:)
-      !$loki dimension(MFRSTLW:MLSTHG)
-      REAL(KIND=JWRB), ALLOCATABLE :: FKLAP(:)
-      !$loki dimension(MFRSTLW:MLSTHG)
+      REAL(KIND=JWRB), ALLOCATABLE :: AF11(:) 
+      REAL(KIND=JWRB), ALLOCATABLE :: FKLAP(:) 
       REAL(KIND=JWRB), ALLOCATABLE :: FKLAP1(:) 
-      !$loki dimension(MFRSTLW:MLSTHG)
-      REAL(KIND=JWRB), ALLOCATABLE :: FKLAM(:)
-      !$loki dimension(MFRSTLW:MLSTHG)
+      REAL(KIND=JWRB), ALLOCATABLE :: FKLAM(:) 
       REAL(KIND=JWRB), ALLOCATABLE :: FKLAM1(:) 
       REAL(KIND=JWRB)              :: ACL1 
       REAL(KIND=JWRB)              :: ACL2 
@@ -57,11 +43,8 @@
       REAL(KIND=JWRB)              :: CL21 
       REAL(KIND=JWRB)              :: DAL1 
       REAL(KIND=JWRB)              :: DAL2 
-      !$loki dimension(KFRH)
       REAL(KIND=JWRB), ALLOCATABLE :: FRH(:)
-      !$loki dimension(MFRSTLW:1)
       REAL(KIND=JWRB), ALLOCATABLE :: FTRF(:)
-      !$loki dimension(NRNL,1:MLSTHG)
       REAL(KIND=JWRB), ALLOCATABLE :: RNLCOEF(:,:)
 
 !*     VARIABLE.   TYPE.     PURPOSE.

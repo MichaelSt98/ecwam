@@ -281,15 +281,15 @@ IF (LHOOK) CALL DR_HOOK('SINPUT_ARD',0,ZHOOK_HANDLE)
           USTP(IJ,2) = UFRIC(IJ)*(1.0_JWRB-SIG_N(IJ))
         ENDDO
       ELSE
-         WRITE (IU06,*) '**************************************'
-         WRITE (IU06,*) '*    FATAL ERROR                     *'
-         WRITE (IU06,*) '*    ===========                     *'
-         WRITE (IU06,*) '* IN SINPUT_ARD: NGST > 2            *'
-         WRITE (IU06,*) '* NGST = ', NGST
-         WRITE (IU06,*) '* PROGRAM ABORTS.   PROGRAM ABORTS.  *'
-         WRITE (IU06,*) '*                                    *'
-         WRITE (IU06,*) '**************************************'
-         CALL ABORT1
+         ! WRITE (IU06,*) '**************************************'
+         ! WRITE (IU06,*) '*    FATAL ERROR                     *'
+         ! WRITE (IU06,*) '*    ===========                     *'
+         ! WRITE (IU06,*) '* IN SINPUT_ARD: NGST > 2            *'
+         ! WRITE (IU06,*) '* NGST = ', NGST
+         ! WRITE (IU06,*) '* PROGRAM ABORTS.   PROGRAM ABORTS.  *'
+         ! WRITE (IU06,*) '*                                    *'
+         ! WRITE (IU06,*) '**************************************'
+         ! CALL ABORT1
       ENDIF
 
       DO IGST=1,NGST

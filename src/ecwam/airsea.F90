@@ -116,11 +116,11 @@
         ENDDO
 
       ELSE
-        WRITE (IU06, * ) ' ++++++++++++++++++++++++++++++++++++++++++'
-        WRITE (IU06, * ) ' + AIRSEA : INVALID VALUE OF ICODE_WND    +'
-        WRITE (IU06, * ) ' ICODE_WND = ', ICODE_WND
-        WRITE (IU06, * ) ' ++++++++++++++++++++++++++++++++++++++++++'
-        CALL ABORT1
+        ! WRITE (IU06, * ) ' ++++++++++++++++++++++++++++++++++++++++++'
+        ! WRITE (IU06, * ) ' + AIRSEA : INVALID VALUE OF ICODE_WND    +'
+        ! WRITE (IU06, * ) ' ICODE_WND = ', ICODE_WND
+        ! WRITE (IU06, * ) ' ++++++++++++++++++++++++++++++++++++++++++'
+        ! CALL ABORT1
       ENDIF
 
       IF (LHOOK) CALL DR_HOOK ('AIRSEA', 1, ZHOOK_HANDLE)

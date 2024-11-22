@@ -22,6 +22,9 @@ foreach( program
     )
     ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-${program})
 
+    
+    set_target_properties(${PROJECT_NAME}-${program} PROPERTIES LINKER_LANGUAGE Fortran)
+    # target_link_libraries(${PROJECT_NAME}-${program} cudadevrt cudart)
 endforeach()
 
 string( TOUPPER ${PROJECT_NAME} PNAME )
