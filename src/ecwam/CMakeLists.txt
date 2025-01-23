@@ -457,7 +457,7 @@ ecwam_target_fortran_module_directory(
 
 if( HAVE_ACC AND CMAKE_Fortran_COMPILER_ID MATCHES "PGI|NVHPC")
    target_link_options( ${ecwam} INTERFACE SHELL:${OpenACC_Fortran_FLAGS} )
-   target_compile_options( ${ecwam} PRIVATE "-gpu=maxregcount:168,fastmath" )
+   # target_compile_options( ${ecwam} PRIVATE "-gpu=maxregcount:168,fastmath" )
 endif()
 
 if( HAVE_CUDA )
@@ -515,7 +515,8 @@ if( HAVE_LOKI )
   # Apply Loki source file transformation to lib target
   loki_transform_target( TARGET ${ecwam}
     MODE ${LOKI_MODE}
-    DIRECTIVE openacc
+    # DIRECTIVE openacc
+    DIRECTIVE omp-gpu
     FRONTEND ${LOKI_FRONTEND}
     CONFIG ${LOKI_CONFIG_FILE}
     PLAN ${CMAKE_CURRENT_BINARY_DIR}/loki_plan_ecwam.cmake
