@@ -99,8 +99,8 @@ SUBROUTINE PROPAG_WAM (BLK2GLO, WAVNUM, CGROUP, OMOSNH2KD, FL1, &
 IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 
 
-!$acc data present(FL1, WAVNUM, CGROUP, OMOSNH2KD, DEPTH, DELLAM1,COSPHM1,UCUR,VCUR,BLK2GLO) CREATE(FL1_EXT,FL3_EXT) &
-!$acc & create(BUFFER_EXT)
+!! $ acc data present(FL1, WAVNUM, CGROUP, OMOSNH2KD, DEPTH, DELLAM1,COSPHM1,UCUR,VCUR,BLK2GLO) CREATE(FL1_EXT,FL3_EXT) &
+!! $ acc & create(BUFFER_EXT)
       IF (NIBLO > 1) THEN
 
         IJSG = IJFROMCHNK(1,1)
@@ -116,7 +116,7 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !!! the advection schemes are still written in block structure
 !!! mapping chuncks to block ONLY for actual grid points !!!!
 #ifdef _OPENACC
-        !$acc kernels loop independent private(KIJS, IJSB, KIJL, IJLB)
+        !! $ acc kernels loop independent private(KIJS, IJSB, KIJL, IJLB)
 #else
 !$OMP   PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, IJSB, KIJL, IJLB, M, K)
 #endif /*_OPENACC*/
@@ -125,7 +125,7 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
           IJSB = IJFROMCHNK(KIJS, ICHNK)
           KIJL = KIJL4CHNK(ICHNK)
           IJLB = IJFROMCHNK(KIJL, ICHNK)
-          !$acc loop independent collapse(2)
+          !! $ acc loop independent collapse(2)
           DO M = 1, NFRE_RED
             DO K = 1, NANG
               FL1_EXT(IJSB:IJLB, K, M) = FL1(KIJS:KIJL, K, M, ICHNK)
@@ -133,15 +133,15 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
           ENDDO
         ENDDO
 #ifdef _OPENACC
-        !$acc end kernels
+        !! $ acc end kernels
 #else
 !$OMP   END PARALLEL DO
 #endif /*_OPENACC*/
 
 !       SET THE DUMMY LAND POINT TO 0.
-        !$acc kernels
+        !! $ acc kernels
         FL1_EXT(NSUP+1,:,:) = 0.0_JWRB 
-        !$acc end kernels
+        !! $ acc end kernels
 
 
         IF (LLUNSTR) THEN 
@@ -247,14 +247,14 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
                DO WHILE (ISUBST <= NSTEP_LF)
 
 #ifdef _OPENACC
-!$acc kernels loop private(KIJS, KIJL, FL1_EXT)
+!! $ acc kernels loop private(KIJS, KIJL, FL1_EXT)
 #else
 !$OMP            PARALLEL DO SCHEDULE(STATIC,1) PRIVATE(JKGLO, KIJS, KIJL, M, K, IJ)
 #endif /*_OPENACC*/
                  DO JKGLO = IJSG, IJLG, NPROMA
                    KIJS=JKGLO
                    KIJL=MIN(KIJS+NPROMA-1, IJLG)
-                   !$acc loop independent collapse(3)
+                   !! $ acc loop independent collapse(3)
                    DO M = 1, IFRELFMAX 
                      DO K = 1, NANG
                        DO IJ = KIJS, KIJL
@@ -264,7 +264,7 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
                    ENDDO
                  ENDDO
 #ifdef _OPENACC
-!$acc end kernels
+!! $ acc end kernels
 #else
 !$OMP            END PARALLEL DO
 #endif /*_OPENACC*/
@@ -347,7 +347,7 @@ ENDIF  ! end sub time steps (if needed)
 !!! the advection schemes are still written in block structure
 !!!  So need to convert back to the nproma_wam chuncks
 #ifdef _OPENACC
-        !$acc kernels loop independent private(KIJS, IJSB, KIJL, IJLB)
+        !! $ acc kernels loop independent private(KIJS, IJSB, KIJL, IJLB)
 #else
 !$OMP     PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, IJSB, KIJL, IJLB, M, K, II, J)
 #endif /*_OPENACC*/
@@ -356,7 +356,7 @@ ENDIF  ! end sub time steps (if needed)
             IJSB = IJFROMCHNK(KIJS, ICHNK)
             KIJL = KIJL4CHNK(ICHNK)
             IJLB = IJFROMCHNK(KIJL, ICHNK)
-            !$acc loop independent collapse(3)
+            !! $ acc loop independent collapse(3)
             DO M = 1, NFRE_RED
               DO K = 1, NANG
                  DO J = KIJS, KIJL
@@ -368,7 +368,7 @@ ENDIF  ! end sub time steps (if needed)
 
             IF (KIJL < NPROMA_WAM) THEN
               !!! make sure fictious points keep values of the first point in the chunk
-              !$acc loop independent collapse(3)
+              !! $ acc loop independent collapse(3)
               DO M = 1, NFRE_RED
                 DO K = 1, NANG
                   DO J = KIJL+1,NPROMA_WAM
@@ -380,7 +380,7 @@ ENDIF  ! end sub time steps (if needed)
 
           ENDDO
 #ifdef _OPENACC
-        !$acc end kernels
+        !! $ acc end kernels
 #else
 !$OMP     END PARALLEL DO
 #endif /*_OPENACC*/
@@ -390,7 +390,7 @@ ENDIF  ! end sub time steps (if needed)
         ENDIF  ! end propagation
 
       ENDIF ! more than one grid point
-!$acc end data
+!! $ acc end data
 
       L1STCALL=.FALSE.
       LLCHKCFL=.FALSE.

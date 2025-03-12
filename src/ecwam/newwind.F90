@@ -124,7 +124,7 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
 
         CALL GSTATS(1492,0)
 #ifdef _OPENACC
-!$acc parallel loop gang present(FF_NEXT,FF_NOW) private(KIJS,KIJL) vector_length(NPROMA_WAM)
+!! $ acc parallel loop gang present(FF_NEXT,FF_NOW) private(KIJS,KIJL) vector_length(NPROMA_WAM)
 #else
 !$OMP   PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, KIJL, IJ, TLWMAX)
 #endif
@@ -132,7 +132,7 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
           KIJS = 1
           KIJL = NPROMA_WAM
           IF (ICODE_WND == 3 ) THEN
-            !$acc loop vector
+            !! $ acc loop vector
             DO IJ = KIJS, KIJL
               FF_NOW%WSWAVE(IJ,ICHNK) = FF_NEXT%WSWAVE(IJ,ICHNK)
 ! adapt first estimate of wave induced stress for low winds
@@ -144,7 +144,7 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
               ENDIF
             ENDDO
           ELSE
-            !$acc loop vector
+            !! $ acc loop vector
             DO IJ = KIJS, KIJL
               FF_NOW%UFRIC(IJ,ICHNK) = FF_NEXT%UFRIC(IJ,ICHNK)
 ! update the estimate of TAUW
@@ -154,7 +154,7 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
             ENDDO
           ENDIF
 
-          !$acc loop vector
+          !! $ acc loop vector
           DO IJ = KIJS, KIJL
             FF_NOW%WDWAVE(IJ,ICHNK)  = FF_NEXT%WDWAVE(IJ,ICHNK)
             FF_NOW%AIRD(IJ,ICHNK)    = FF_NEXT%AIRD(IJ,ICHNK)
@@ -167,7 +167,7 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
 
         ENDDO
 #ifdef _OPENACC
-!$acc end parallel loop
+!! $ acc end parallel loop
 #else
 !$OMP   END PARALLEL DO
 #endif

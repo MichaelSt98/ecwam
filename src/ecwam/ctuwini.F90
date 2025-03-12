@@ -57,7 +57,7 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
 
       NLAND = NSUP+1
       
-      !$acc parallel loop independent collapse(2)
+      !! $ acc parallel loop independent collapse(2)
       DO IC=1,2
         DO IJ = KIJS,KIJL
           IF (KLAT(IJ,IC,1) < NLAND .AND. KLAT(IJ,IC,2) < NLAND) THEN
@@ -76,9 +76,9 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
           ENDIF
         ENDDO
       ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
       
-      !$acc parallel loop independent collapse(2)
+      !! $ acc parallel loop independent collapse(2)
       DO ICR=1,4
         DO IJ = KIJS,KIJL
           IF (KCOR(IJ,ICR,1) < NLAND .AND. KCOR(IJ,ICR,2) < NLAND) THEN
@@ -97,12 +97,12 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
           ENDIF
         ENDDO
       ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
 
 
 !     INITIALISATION
 
-      !$acc parallel loop independent collapse(5)
+      !! $ acc parallel loop independent collapse(5)
       DO ICL=1,2
         DO IC=1,2
           DO M=1,NFRE_RED
@@ -114,10 +114,10 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
           ENDDO
         ENDDO
       ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
 
 
-      !$acc parallel loop independent collapse(4)
+      !! $ acc parallel loop independent collapse(4)
       DO IC=1,2
         DO M=1,NFRE_RED
           DO K=1,NANG
@@ -127,10 +127,10 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
           ENDDO
         ENDDO
       ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
 
 
-      !$acc parallel loop  independent collapse(5)
+      !! $ acc parallel loop  independent collapse(5)
       DO ICL=1,2
         DO ICR=1,4
           DO M=1,NFRE_RED
@@ -142,7 +142,7 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
           ENDDO
         ENDDO
       ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
 
 
 
@@ -153,7 +153,7 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
 !
 !*        COMPUTE COS PHI FACTOR FOR ADJOINING GRID POINT.
 !         (for all grid points)
-      !$acc parallel loop independent collapse(2) private(KY,KK,KKM)
+      !! $ acc parallel loop independent collapse(2) private(KY,KK,KKM)
           DO IC=1,2
             DO IJ = KIJS,KIJL
               KY=BLK2GLO%KXLT(IJ)
@@ -162,7 +162,7 @@ IF (LHOOK) CALL DR_HOOK('CTUWINI',0,ZHOOK_HANDLE)
               DP(IJ,IC) = COSPH(KKM)*COSPHM1_EXT(IJ)
             ENDDO
           ENDDO
-      !$acc end parallel
+      !! $ acc end parallel
        ENDIF
 
 
