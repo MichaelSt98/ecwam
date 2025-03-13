@@ -68,6 +68,8 @@
       REAL(KIND=JWRB), PARAMETER :: FM2FP=0.9_JWRB
       INTEGER(KIND=JWIM), PARAMETER :: NPMAX=20
 
+      !$acc declare copyin(G, DKMAX, PI)
+
 !*    VARIABLE.   TYPE.     PURPOSE.
 !     ---------   -------   --------
 !     *G*         REAL      ACCELLERATION OF GRAVITY.

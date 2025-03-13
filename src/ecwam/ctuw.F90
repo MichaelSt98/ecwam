@@ -142,6 +142,7 @@ IF (LHOOK) CALL DR_HOOK('CTUW',0,ZHOOK_HANDLE)
 
 !*        LOOP OVER FREQUENCIES.
 !         ----------------------
+!$acc data copyin(SINTH, COSTH)
 !$acc kernels !loop private(CGYP,KIJS,KIJL,CGX,IX,KY,UU,UREL,ISSU,VV,VREL,ISSV,DXP,DYP,ADXP,ADYP,DXUP,DXDW,DYUP,DYDW,DXX,DYY,GRIDAREAM1,WEIGHT)
           DO M = MSTART, MEND
 
@@ -365,6 +366,7 @@ IF (LHOOK) CALL DR_HOOK('CTUW',0,ZHOOK_HANDLE)
           ENDDO  ! END LOOP OVER FREQUENCIES
 
 !$acc end kernels
+!$acc end data
 
       ELSE
 !*    CARTESIAN GRID.
@@ -409,7 +411,9 @@ IF (LHOOK) CALL DR_HOOK('CTUW',0,ZHOOK_HANDLE)
 !*    LOOP OVER DIRECTIONS.
 !     ---------------------
 
-!$acc parallel loop private(km1,kp1,sp,sm,DELFR0,DRGP,DRGM,DRDP,DRDM,DRCP,DRCM)
+! ! $acc parallel loop private(km1,kp1,sp,sm,DELFR0,DRGP,DRGM,DRDP,DRDM,DRCP,DRCM)
+!$acc data copyin(SINTH, COSPH, SINPH)
+!$acc kernels
       DO K=1,NANG
         KP1 = K+1
         IF (KP1 > NANG) KP1 = 1
@@ -526,7 +530,9 @@ IF (LHOOK) CALL DR_HOOK('CTUW',0,ZHOOK_HANDLE)
 
       ENDDO  ! END LOOP ON DIRECTIONS
 
-!$acc end parallel
+! ! $acc end parallel
+!$acc end kernels
+!$acc end data
 
 !     CHECK THAT WEIGHTS ARE LESS THAN 1
 !     AND COMPUTE THEIR SUM AND CHECK IT IS LESS THAN 1 AS WELL

@@ -124,7 +124,8 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
 
         CALL GSTATS(1492,0)
 #ifdef _OPENACC
-!$acc parallel loop gang present(FF_NEXT,FF_NOW) private(KIJS,KIJL) vector_length(NPROMA_WAM)
+! ! $acc parallel loop gang present(FF_NEXT,FF_NOW) private(KIJS,KIJL) vector_length(NPROMA_WAM)
+!$acc kernels
 #else
 !$OMP   PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, KIJL, IJ, TLWMAX)
 #endif
@@ -167,7 +168,8 @@ IF (LHOOK) CALL DR_HOOK('NEWWIND',0,ZHOOK_HANDLE)
 
         ENDDO
 #ifdef _OPENACC
-!$acc end parallel loop
+! ! $acc end parallel loop
+!$acc end kernels
 #else
 !$OMP   END PARALLEL DO
 #endif

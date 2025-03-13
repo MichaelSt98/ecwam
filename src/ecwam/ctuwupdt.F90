@@ -105,6 +105,7 @@ IF (LFRSTCTU) THEN
   IF (.NOT. ALLOCATED(KCR)) ALLOCATE(KCR(NANG,4))
 
 !$acc update device(JXO, JYO, KCR, KPM)
+!$acc data copyin(COSTH, SINTH)
  !$acc kernels
   DO K=1,NANG
 
@@ -158,7 +159,7 @@ IF (LFRSTCTU) THEN
     ENDIF
   ENDDO
   !$acc end kernels
-
+!$acc end data
   LFRSTCTU = .FALSE.
 
 ENDIF

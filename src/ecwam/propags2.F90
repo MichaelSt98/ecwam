@@ -95,6 +95,16 @@ IF (LHOOK) CALL DR_HOOK('PROPAGS2',0,ZHOOK_HANDLE)
 !*      WITHOUT DEPTH OR/AND CURRENT REFRACTION.
 !       ----------------------------------------
 
+  print *, "ND3S: ", ND3S
+  print *, "ND3E: ", ND3E
+
+  ! $acc update device(WKPMN, KPM, LLWKPMN, KCR, KCOR, JXO, JYO, SUMWN, WLONN, WLATN, WCORN, KLAT, KLON)
+
+  ! ! $acc data copyin(WKPMN, KPM, LLWKPMN, KCR, KCOR, JXO, )
+  ! ! $acc data copyin(ND3E, ND3S, F1,KLON,KLAT,KCOR,SUMWN,WLONN,WLATN,WCORN,JXO,JYO,KCR,WKPMN,LLWKPMN,KPM) copy(F3)
+
+  ! $acc data copyin(ND3S, ND3E)
+
           !$acc kernels loop present(F1,F3,KLON,KLAT,KCOR,SUMWN,WLONN,WLATN,WCORN,JXO,JYO,KCR,WKPMN,LLWKPMN,KPM)
           DO K = 1, NANG
             DO M = ND3S, ND3E
@@ -132,6 +142,7 @@ IF (LHOOK) CALL DR_HOOK('PROPAGS2',0,ZHOOK_HANDLE)
             ENDDO
           ENDDO
           !$acc end kernels 
+          ! $acc end data
 
         ELSE
 !*      DEPTH AND CURRENT REFRACTION.
