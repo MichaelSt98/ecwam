@@ -36,7 +36,7 @@ REAL(KIND=JWRB) FUNCTION TRANSF_R(XK0,D)
 
       REAL(KIND=JWRB), PARAMETER :: EPS=0.0001_JWRB
       REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-      REAL(KIND=JWRB) :: XK0,D
+      REAL(KIND=JWRB), INTENT(IN) :: XK0,D
       REAL(KIND=JWRB) :: X,XK,T_0,T_0_SQ,OM,C_0,V_G,D2OM
 
 !----------------------------------------------------------------------

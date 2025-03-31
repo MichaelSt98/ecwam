@@ -144,11 +144,19 @@ SUBROUTINE OUTBLOCK (KIJS, KIJL, MIJ,                 &
 
       LOGICAL :: LLPEAKF
 
-      DATA TEWH /10._JWRB,12._JWRB,14._JWRB,17._JWRB,21._JWRB,25._JWRB,30._JWRB/
+      ! DATA TEWH /10._JWRB,12._JWRB,14._JWRB,17._JWRB,21._JWRB,25._JWRB,30._JWRB/
 
 ! ----------------------------------------------------------------------
 
 IF (LHOOK) CALL DR_HOOK('OUTBLOCK',0,ZHOOK_HANDLE)
+
+     TEWH(0) = 10._JWRB
+     TEWH(1) = 12._JWRB
+     TEWH(2) = 14._JWRB
+     TEWH(3) = 17._JWRB
+     TEWH(4) = 21._JWRB
+     TEWH(5) = 25._JWRB
+     TEWH(6) = 30._JWRB
 
 !
 !*    1. COMPUTE MEAN PARAMETERS.

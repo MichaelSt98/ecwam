@@ -48,6 +48,7 @@
       !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: C(:)
       REAL(KIND=JWRB)              :: DELTH
+      REAL(KIND=JWRB)              :: DELTR
       !$loki dimension(NFRE)
       REAL(KIND=JWRB), ALLOCATABLE :: TH(:)
       !$loki dimension(NFRE)
@@ -119,8 +120,6 @@
 
 !*     VARIABLE.   TYPE.     PURPOSE.
 !      ---------   -------   --------
-!      *IFRE1*     INTEGER   INDEX OF THE REFERENCE FREQUENCY IN THE FREQUENCY ARRAYS
-!      *FR1*       REAL      VALUE OF THE REFERENCE FREQUENCY (Hz)
 !      *FR*        REAL      FREQUENCIES IN HERTZ.
 !      *DFIM*      REAL      FREQUENCY INTERVAL*DIRECTION INTERVAL.
 !                            FOR TRAPEZOIDAL RULE
@@ -142,6 +141,7 @@
 !      *GOM*       REAL      DEEP WATER GROUP VELOCITIES (M/S).
 !      *C*         REAL      DEEP WATER PHASE VELOCITIES (M/S).
 !      *DELTH*     REAL      ANGULAR INCREMENT OF SPECTRUM (RADIANS).
+!      *DELTR*     REAL      DELTH TIMES RADIUS OF EARTH (METRES).
 !      *TH*        REAL      DIRECTIONS IN RADIANS.
 !      *COSTH*     REAL      COS OF DIRECTION.
 !      *SINTH*     REAL      SIN OF DIRECTION.

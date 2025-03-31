@@ -116,11 +116,11 @@
         FM(IJ) = EM_LOC(IJ)/FM(IJ)
       ENDDO
 
-      IF(PRESENT(EM))THEN
+      ! IF(PRESENT(EM))THEN
         DO IJ=KIJS,KIJL
            EM(IJ) = EM_LOC(IJ)
         ENDDO
-      ENDIF
+      ! ENDIF
 
       IF (LHOOK) CALL DR_HOOK('FEMEANWS',1,ZHOOK_HANDLE)
 

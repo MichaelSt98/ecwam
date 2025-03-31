@@ -38,9 +38,9 @@ IMPLICIT NONE
 !     INTERFACE VARIABLES.                                                     !
 !     --------------------                                                     !
 !                                                                              !
-REAL(KIND=JWRB) :: RN3   !! AVERAGE NUMBER OF 3D WAVES
-REAL(KIND=JWRB) :: RN2   !! AVERAGE NUMBER OF 2D WAVES
-REAL(KIND=JWRB) :: RN1   !! AVERAGE NUMBER OF 1D WAVES
+REAL(KIND=JWRB), INTENT(IN) :: RN3   !! AVERAGE NUMBER OF 3D WAVES
+REAL(KIND=JWRB), INTENT(IN) :: RN2   !! AVERAGE NUMBER OF 2D WAVES
+REAL(KIND=JWRB), INTENT(IN) :: RN1   !! AVERAGE NUMBER OF 1D WAVES
 
 
 ! ---------------------------------------------------------------------------- !
