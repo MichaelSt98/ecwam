@@ -27,6 +27,7 @@
       REAL(KIND=JWRB)              :: CDICWA
       REAL(KIND=JWRB)              :: TICMIN, HICMIN
       REAL(KIND=JWRB)              :: DTIC, DHIC
+      !$loki dimension(NICT,NICH)
       REAL(KIND=JWRB), ALLOCATABLE :: CIDEAC(:,:) 
 
       LOGICAL :: LICERUN 

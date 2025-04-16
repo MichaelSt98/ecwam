@@ -175,7 +175,8 @@ IF (LLGCBZ0) THEN
             ZCHAR = MIN(ZCHAR,ALPHAMAX)
             CDFG = ACDLIN + BCDLIN*SQRT(ZCHAR) * UTOP(IJ)
           ELSE
-            CDFG = CDM(UTOP(IJ))
+            ! CDFG = CDM(UTOP(IJ))
+            CDFG = MAX(MIN(0.0006_JWRB+0.00008_JWRB*UTOP(IJ), 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(UTOP(IJ)-33._JWRB))),0.001_JWRB)
           ENDIF
           USTAR(IJ) = UTOP(IJ)*SQRT(CDFG)
         ENDDO
@@ -208,7 +209,7 @@ IF (LLGCBZ0) THEN
 
 !         CONVERGENCE ?
           DEL = USTAR(IJ)-USTOLD
-          IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT
+          ! IF (ABS(DEL) < PCE_GC*USTAR(IJ)) EXIT
           TAUOLD = USTAR(IJ)**2
           USTOLD = USTAR(IJ)
         ENDDO
@@ -217,7 +218,8 @@ IF (LLGCBZ0) THEN
 
         ! protection just in case there is no convergence
         IF (ITER > NITER .AND. X >= PMAX ) THEN
-          CDFG = CDM(UTOP(IJ))
+          ! CDFG = CDM(UTOP(IJ))
+          CDFG = MAX(MIN(0.0006_JWRB+0.00008_JWRB*UTOP(IJ), 0.001_JWRB+0.0018_JWRB*EXP(-0.05_JWRB*(UTOP(IJ)-33._JWRB))),0.001_JWRB)
           USTAR(IJ) = UTOP(IJ)*SQRT(CDFG)
           Z0MINRST = USTAR(IJ)**2 * ALPHA*GM1
           Z0(IJ) = MAX(XNLEV/(EXP(XKUTOP/USTAR(IJ))-1.0_JWRB), Z0MINRST)
@@ -260,7 +262,7 @@ IF (LLGCBZ0) THEN
             TAUNEW = MAX(USTAR(IJ)**2,TAUWEFF(IJ))
             USTAR(IJ) = SQRT(TAUNEW)
             DEL = TAUNEW-TAUOLD
-            IF (ABS(DEL) < PCE_GC*TAUOLD) EXIT
+            ! IF (ABS(DEL) < PCE_GC*TAUOLD) EXIT
             TAUOLD = TAUNEW
             USTOLD = USTAR(IJ)
 
@@ -328,7 +330,7 @@ ELSE
           IF (DELF /= 0.0_JWRB) USTAR(IJ) = USTAR(IJ)-F/DELF
           TAUNEW = MAX(USTAR(IJ)**2,TAUWEFF(IJ))
           USTAR(IJ) = SQRT(TAUNEW)
-          IF (TAUNEW == TAUOLD) EXIT
+          ! IF (TAUNEW == TAUOLD) EXIT
           USTM1 = 1.0_JWRB/MAX(USTAR(IJ),EPSUS)
           TAUOLD = TAUNEW
         ENDDO

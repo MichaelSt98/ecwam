@@ -72,6 +72,7 @@
       INTEGER(KIND=JWIM), ALLOCATABLE, DIMENSION(:,:) :: INFOBOUT
 
       !$loki create device(ITOBOUT, NIPRMOUT)
+      !$acc declare create(ITOBOUT, NIPRMOUT)
 
 !*     VARIABLE.   TYPE.     PURPOSE.
 !      ---------   -------   --------

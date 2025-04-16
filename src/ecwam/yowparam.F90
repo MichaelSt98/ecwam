@@ -65,4 +65,5 @@
 !                            (like it used to be done).
 ! ----------------------------------------------------------------------
 !$loki create device( nfre_red, nang, nfre )
+!$acc declare create(nfre_red, nang, nfre )
       END MODULE YOWPARAM

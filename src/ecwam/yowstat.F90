@@ -26,6 +26,7 @@
       CHARACTER(LEN=14) ::  CDATEE
       CHARACTER(LEN=14) ::  CDATEF
       CHARACTER(LEN=14) ::  CDTPRO
+      !$loki dimension(NDELW_LST)
       CHARACTER(LEN=14), ALLOCATABLE :: CDTW_LST(:)
 
       CHARACTER(LEN=14) ::  CDTRES
@@ -41,8 +42,10 @@
       INTEGER(KIND=JWIM) :: IDELPRO
       INTEGER(KIND=JWIM) :: IDELT
       INTEGER(KIND=JWIM) :: IDELWI
+      !$loki dimension(NDELW_LST)
       INTEGER(KIND=JWIM), ALLOCATABLE :: IDELWI_LST(:)
       INTEGER(KIND=JWIM) :: IDELWO
+      !$loki dimension(NDELW_LST)
       INTEGER(KIND=JWIM), ALLOCATABLE :: IDELWO_LST(:)
       INTEGER(KIND=JWIM) :: NDELW_LST
       INTEGER(KIND=JWIM) :: IDELALT
@@ -95,6 +98,7 @@
       REAL(KIND=JWRB) :: TIME_PHYS = 0._JWRB
 
       !$loki create device(LBIWBK)
+      !$acc declare create(LBIWBK)
 
 !*     VARIABLE.   TYPE.     PURPOSE.
 !      ---------   -------   --------

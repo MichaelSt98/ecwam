@@ -48,6 +48,7 @@ macro( ecwam_expand_drv_types )
           DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/drvtype_mod.fypp
           VERBATIM)
       list( APPEND ecwam_srcs ${CMAKE_CURRENT_BINARY_DIR}/${_type}_type_mod.F90)
+      list( APPEND ecwam_srcs_old ${CMAKE_CURRENT_BINARY_DIR}/${_type}_type_mod.F90)
    endforeach()
    
    add_custom_command(

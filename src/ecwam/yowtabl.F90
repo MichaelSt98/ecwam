@@ -72,6 +72,7 @@
       REAL(KIND=JWRB), ALLOCATABLE :: TFAKH(:,:)
 
       !$loki create device(NMAX)
+      !$acc declare create(NMAX)
 
 !*     VARIABLE.   TYPE.     PURPOSE.
 !      ---------   -------   --------
