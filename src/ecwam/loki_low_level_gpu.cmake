@@ -377,6 +377,42 @@ list(APPEND phys_srcs
      # outsetwmask.F90
 )
 
+list(APPEND inlined_srcs
+  # chnkmin.F90
+  # ns_gc.F90
+  # stress_gc.F90
+  # transf_snl.F90
+  # transf.F90
+  aki_ice.F90
+  aki.F90
+  peakfri.F90
+  femeanws.F90
+  frcutindex.F90
+  omegagc.F90
+  tau_phi_hf.F90
+  stresso.F90
+  wsigstar.F90
+  sinput.F90
+  sinput_ard.F90
+  taut_z0.F90
+  airsea.F90
+  femean.F90
+  wnfluxes.F90
+  sdiwbk.F90
+  sbottom.F90
+  fkmean.F90
+  imphftail.F90
+  setice.F90
+  stokestrn.F90
+  stokesdrift.F90
+  semean.F90
+  sdepthlim.F90
+  sinflx.F90
+  sdissip_ard.F90
+  sdissip.F90
+  peak_ang.F90
+)
+
   # foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
   #    string(REPLACE ".F90" "" fnc ${src})
   #    string(CONCAT fnm "${CMAKE_CURRENT_SOURCE_DIR}/" ${fnc} "_c.c")
@@ -387,12 +423,16 @@ list(APPEND phys_srcs
   list(REMOVE_ITEM ecwam_srcs_old wamintgr.F90)
 
   foreach(src ${phys_srcs}) # wamintgr_cuda_mod.F90 ${global_var_mods})
+     if (src IN_LIST inlined_srcs)
+        message("skipping ${src} since inlined!")
+     else()
      string(REPLACE ".F90" "" fnc ${src})
      string(CONCAT fnm "${CMAKE_CURRENT_BINARY_DIR}/loki-cuda-hoist/" ${fnc} "_c.c")
      # string(CONCAT fnm "../cuda-ecwam-3/" ${fnc} "_c.c")
      ## string(CONCAT fnm "../cuda-ecwam-1-small-testcase/" ${fnc} "_c.c")
      ## string(CONCAT fnm "../phys-scc-cuda/" ${fnc} "_c.c")
      list(APPEND loki_wam_scc_cuda_srcs ${fnm})
+     endif()
   endforeach()
 
   # foreach(src ${global_var_mods} wamintgr_loki_gpu.F90) # wamintgr_cuda_mod.F90 ${global_var_mods})

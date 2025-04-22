@@ -483,7 +483,7 @@ if (HAVE_LOKI AND LOKI_MODE MATCHES "cuda-hoist|cuda-parametrise")
 
   target_compile_options(${ecwam} PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
 	# -g -G -O0 --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
-	-O3 --maxrregcount 128 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
+	--ptxas-options=-O3 -O3 -use_fast_math --maxrregcount 168 -dc -gencode arch=compute_${CMAKE_CUDA_ARCHITECTURES},code=sm_${CMAKE_CUDA_ARCHITECTURES}>)
 
   ecwam_target_fortran_module_directory(
     TARGET ${ecwam}
