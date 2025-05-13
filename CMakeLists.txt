@@ -21,7 +21,7 @@ endif()
 
 string( TOUPPER ${ECWAM_PROJECT_NAME} PNAME )
 set( ${PNAME}_ECBUILD_COMPILE_FLAGS ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ecwam_init_flags.cmake CACHE FILEPATH "")
-project( ${ECWAM_PROJECT_NAME} LANGUAGES Fortran C CXX )
+project( ${ECWAM_PROJECT_NAME} LANGUAGES Fortran C CXX HIP )
 
 include( ecwam_macros )
 ecbuild_enable_fortran( REQUIRED NO_MODULE_DIRECTORY )
@@ -100,7 +100,8 @@ endif()
 
 unset( OpenMP_Fortran_LIBRARIES )
 if( HAVE_OMP )
-  set( OpenMP_Fortran_LIBRARIES OpenMP::OpenMP_Fortran )
+	set( OpenMP_Fortran_LIBRARIES OpenMP::OpenMP_Fortran )
+	# set( OpenMP_Fortran_LIBRARIES OpenMP )
 endif()
 
 ### Apply Loki source-to-source transformations to the ecWam physics

@@ -18,17 +18,18 @@ foreach( program
         TARGET          ${PROJECT_NAME}-${program}
         SOURCES         ${program}.F90
         LIBS            ${PROJECT_NAME} ${OpenMP_Fortran_LIBRARIES} $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
-        LINKER_LANGUAGE Fortran
+	# LINKER_LANGUAGE Fortran
+	LINKER_LANGUAGE HIP
     )
     ecwam_target_compile_definitions_FILENAME(${PROJECT_NAME}-${program})
 
-    set_target_properties(${PROJECT_NAME}-${program} PROPERTIES LINKER_LANGUAGE Fortran)
-    target_link_libraries(${PROJECT_NAME}-${program} cudadevrt cudart)
+    # set_target_properties(${PROJECT_NAME}-${program} PROPERTIES LINKER_LANGUAGE Fortran)
+    # target_link_libraries(${PROJECT_NAME}-${program} cudadevrt cudart)
  
 endforeach()
 
 string( TOUPPER ${PROJECT_NAME} PNAME )
-foreach( lang Fortran C CXX )
+foreach( lang Fortran C CXX HIP )
     set( ${lang}_flags "${CMAKE_${lang}_FLAGS} ${CMAKE_${lang}_FLAGS_${CMAKE_BUILD_TYPE_CAPS}} ${${PNAME}_${lang}_FLAGS} ${${PNAME}_${lang}_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}" )
     string(REGEX REPLACE "[ ]+" " " ${lang}_flags ${${lang}_flags})
     string(STRIP "${${lang}_flags}" ${lang}_flags)
