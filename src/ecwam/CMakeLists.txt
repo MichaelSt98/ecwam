@@ -386,6 +386,7 @@ if( HAVE_GPU_AWARE_MPI )
   set( MPI_Fortran_LIBRARIES MPI::MPI_Fortran )
 endif()
 
+set( HAVE_MPI_F08 0 )
 if( HAVE_UNWAM )
   list(APPEND ecwam_srcs ${unwam_srcs})
   list(APPEND ECWAM_DEFINITIONS WAM_HAVE_UNWAM)
@@ -483,7 +484,11 @@ foreach( prec sp dp )
     endif()
 
     if( HAVE_CUDA )
-      target_link_options( ecwam_${prec} PUBLIC "-cuda;-gpu=pinned" )
+     if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS "25.5")
+       target_link_options( ecwam_${prec} PUBLIC "-cuda;-gpu=pinned" )
+     else()
+       target_link_options( ecwam_${prec} PUBLIC "-cuda;-gpu=mem:separate:pinnedalloc" )
+     endif()
     endif()
 
     ecwam_target_compile_definitions_FILENAME( ecwam_${prec} )
@@ -532,6 +537,11 @@ if( CMAKE_Fortran_COMPILER_ID MATCHES Intel AND HAVE_SINGLE_PRECISION )
 endif()
 
 if( HAVE_LOKI )
+
+  if (LOKI_MODE MATCHES "sccs-opt")
+       set (LOKI_MODE "sccs-hoist")
+       message("ECWAM SCCS-OPT -> SCCS-HOIST")
+  endif()
 
   set( LOKI_FRONTEND "fp" CACHE STRING "Frontend parser for Loki source transformations" )
 
