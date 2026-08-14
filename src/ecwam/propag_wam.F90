@@ -83,7 +83,7 @@ SUBROUTINE PROPAG_WAM (BLK2GLO, WAVNUM, CGROUP, OMOSNH2KD, FL1, &
       INTEGER(KIND=JWIM) :: IJSG, IJLG, ICHNK, KIJS, KIJL, IJSB, IJLB
       INTEGER(KIND=JWIM) :: ND3SF1, ND3EF1, ND3S, ND3E
 
-      REAL(KIND=JPHOOK) :: ZHOOK_HANDLE, ZHOOK_HANDLE_MPI
+      REAL(KIND=JPHOOK) :: ZHOOK_HANDLE, ZHOOK_HANDLE_MPI, ZHOOK_HANDLE_DETAIL
 
 !     Spectra extended with the halo exchange for the propagation
 !     But limited to NFRE_RED frequencies
@@ -118,6 +118,8 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 #endif
         NPROMA=(IJLG-IJSG+1)/MTHREADS + 1
 
+
+IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_1',0,ZHOOK_HANDLE_DETAIL)
 
 !!! the advection schemes are still written in block structure
 !!! mapping chuncks to block ONLY for actual grid points !!!!
@@ -158,7 +160,10 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !$OMP   END PARALLEL DO
 #endif
 
+IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_1',1,ZHOOK_HANDLE_DETAIL)
+
 !       SET THE DUMMY LAND POINT TO 0.
+IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_2',0,ZHOOK_HANDLE_DETAIL)
 #ifdef OMPGPU
         !$omp target teams distribute parallel do collapse(2)
 #else
@@ -174,6 +179,8 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 #else
         !$acc end kernels
 #endif
+
+IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_2',1,ZHOOK_HANDLE_DETAIL)
         
         IF (LLUNSTR) THEN 
 
@@ -201,18 +208,25 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !          ---------------------
 
            IF (LLUPDTTD) THEN
-             IF (.NOT.ALLOCATED(THDC)) ALLOCATE(THDC(IJSG:IJLG, NANG))
-             IF (.NOT.ALLOCATED(THDD)) ALLOCATE(THDD(IJSG:IJLG, NANG))
-             IF (.NOT.ALLOCATED(SDOT)) ALLOCATE(SDOT(IJSG:IJLG, NANG, NFRE_RED))
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_3',0,ZHOOK_HANDLE_DETAIL)
+              IF (.NOT.ALLOCATED(THDC)) ALLOCATE(THDC(IJSG:IJLG, NANG))
+              IF (.NOT.ALLOCATED(THDD)) ALLOCATE(THDD(IJSG:IJLG, NANG))
+              IF (.NOT.ALLOCATED(SDOT)) ALLOCATE(SDOT(IJSG:IJLG, NANG, NFRE_RED))
+
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_3',1,ZHOOK_HANDLE_DETAIL)
 
 !            NEED HALO VALUES
-             CALL  PROENVHALO (NINF, NSUP,                            &
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_4',0,ZHOOK_HANDLE_DETAIL)
+              CALL  PROENVHALO (NINF, NSUP,                            &
 &                              WAVNUM, CGROUP, OMOSNH2KD,            &
 &                              DEPTH, DELLAM1, COSPHM1, UCUR, VCUR,   &
 &                              BUFFER_EXT)
 
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_4',1,ZHOOK_HANDLE_DETAIL)
+
 
 !            DOT THETA TERM:
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_5',0,ZHOOK_HANDLE_DETAIL)
 
 #ifdef WAM_GPU
 #ifdef OMPGPU
@@ -244,8 +258,10 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !$OMP        END PARALLEL DO
 #endif
 
-             LLUPDTTD = .FALSE.
-           ENDIF
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_5',1,ZHOOK_HANDLE_DETAIL)
+
+              LLUPDTTD = .FALSE.
+            ENDIF
 
 
 !          IPROPAGS = 2 is the default option (the other options are kept but usually not used)
@@ -255,18 +271,24 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
            CASE(2)
 
              IF (LUPDTWGHT) THEN
+               IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_6',0,ZHOOK_HANDLE_DETAIL)
 !              NEED HALO VALUES
                CALL  PROENVHALO (NINF, NSUP,                            &
 &                                WAVNUM, CGROUP, OMOSNH2KD,            &
 &                                DEPTH, DELLAM1, COSPHM1, UCUR, VCUR,   &
 &                                BUFFER_EXT )
 
+               IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_6',1,ZHOOK_HANDLE_DETAIL)
+
 !              COMPUTES ADVECTION WEIGTHS AND CHECK CFL CRITERIA
+               IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_7',0,ZHOOK_HANDLE_DETAIL)
                CALL CTUWUPDT(IJSG, IJLG, NINF, NSUP,                      &
 &                            BLK2GLO,                                     &
 &                            BUFFER_EXT(:,NFRE_RED+1:2*NFRE_RED), BUFFER_EXT(:,2*NFRE_RED+1:3*NFRE_RED),        &
 &                            BUFFER_EXT(:,3*NFRE_RED+2), BUFFER_EXT(:,3*NFRE_RED+3), &
 &                            BUFFER_EXT(:,3*NFRE_RED+4), BUFFER_EXT(:,3*NFRE_RED+5) )
+
+               IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_7',1,ZHOOK_HANDLE_DETAIL)
 
                LUPDTWGHT=.FALSE.
              ENDIF
@@ -276,6 +298,8 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
              ND3EF1=NFRE_RED
              ND3S=1
              ND3E=NFRE_RED
+
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_8',0,ZHOOK_HANDLE_DETAIL)
 
 #ifndef WAM_GPU
 !$OMP        PARALLEL DO SCHEDULE(STATIC,1) PRIVATE(JKGLO, KIJS, KIJL)
@@ -289,7 +313,10 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !$OMP        END PARALLEL DO
 #endif
 
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_8',1,ZHOOK_HANDLE_DETAIL)
+
 !            SUB TIME STEPPING FOR FAST WAVES (only if IFRELFMAX > 0)
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_9',0,ZHOOK_HANDLE_DETAIL)
              IF (IFRELFMAX > 0 .AND. IFRELFMAX < NFRE_RED) THEN
                NSTEP_LF = NINT(REAL(IDELPRO, JWRB)/DELPRO_LF)
                ISUBST = 2  ! The first step was done as part of the previous call to PROPAGS2
@@ -357,8 +384,10 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
                  ISUBST = ISUBST + 1
 
                ENDDO
-             
+
 ENDIF  ! end sub time steps (if needed)
+
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_9',1,ZHOOK_HANDLE_DETAIL)
 
            CASE(1)
 #ifdef WAM_GPU
@@ -387,6 +416,7 @@ ENDIF  ! end sub time steps (if needed)
 !$OMP       END PARALLEL DO
 
            CASE(0)
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_10',0,ZHOOK_HANDLE_DETAIL)
              IF (L1STCALL .OR. LLCHKCFLA) LLCHKCFL=.TRUE.
 
 !            NEED HALO VALUES
@@ -406,13 +436,16 @@ ENDIF  ! end sub time steps (if needed)
 &                           BUFFER_EXT(:,3*NFRE_RED+1), BUFFER_EXT(:,3*NFRE_RED+2), &
 &                           BUFFER_EXT(:,3*NFRE_RED+4), BUFFER_EXT(:,3*NFRE_RED+5), &
 &                           L1STCALL)
-             ENDDO
+              ENDDO
 !$OMP        END PARALLEL DO
-           END SELECT 
+
+             IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_10',1,ZHOOK_HANDLE_DETAIL)
+            END SELECT 
 
 
 !!! the advection schemes are still written in block structure
 !!!  So need to convert back to the nproma_wam chuncks
+           IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_11',0,ZHOOK_HANDLE_DETAIL)
 #ifdef WAM_GPU
 #ifdef OMPGPU
         !$omp target teams distribute
@@ -467,6 +500,8 @@ ENDIF  ! end sub time steps (if needed)
 #else
 !$OMP     END PARALLEL DO
 #endif
+
+           IF (LHOOK) CALL DR_HOOK('PROPAG_WAM_11',1,ZHOOK_HANDLE_DETAIL)
 
            CALL GSTATS(1430,1)
 

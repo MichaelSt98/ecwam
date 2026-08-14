@@ -46,7 +46,7 @@ projects :
 
     - loki :
         git     : https://github.com/ecmwf-ifs/loki
-        version : main
+        version : nams-sk-small-kernels-ecwam
         optional: true
         require : b711b95fec
         cmake   : >
