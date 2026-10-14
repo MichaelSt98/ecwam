@@ -7,6 +7,7 @@ doc/latex
 *.swp
 .nfs*
 build*
+!/handtuned/buildstress.F90
 wamrun*
 slurm*
 install/*
@@ -17,4 +18,3 @@ ecbundle
 .vscode
 *.mod
 __pycache__/
-
