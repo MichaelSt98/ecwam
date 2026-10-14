@@ -1,0 +1,101 @@
+! (C) Copyright 1989- ECMWF.
+! 
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+
+      SUBROUTINE WVALLOC
+
+! ----------------------------------------------------------------------
+
+!**** *WVALLOC* - WAVE MODEL ARRAY ALLOCATION
+
+! ----------------------------------------------------------------------
+
+      USE PARKIND_WAVE, ONLY : JWIM, JWRB, JWRU, JWRO
+
+      USE YOWDRVTYPE, ONLY : ALLOC
+      USE YOWGRID  , ONLY : NPROMA_WAM, NCHNK
+      USE YOWMEAN  , ONLY : INTFLDS
+      USE YOWPARAM , ONLY : NANG     ,NFRE
+      USE YOWPCONS , ONLY : ZMISS
+      USE YOWSHAL  , ONLY : WVPRPT
+      USE YOWSPEC  , ONLY : FF_NOW   ,VARS_4D, MIJ
+      USE YOWWIND  , ONLY : FF_NEXT
+
+      USE YOWNEMOFLDS , ONLY : WAM2NEMO, NEMO2WAM
+      USE YOWFRED     , ONLY : WVPRPT_LAND
+
+      USE YOMHOOK  , ONLY : LHOOK,   DR_HOOK, JPHOOK
+      USE FIELD_DEFAULTS_MODULE, ONLY : INIT_PINNED_VALUE
+
+! ----------------------------------------------------------------------
+
+      IMPLICIT NONE
+
+      INTEGER(KIND=JWIM) :: NPR, MAXLEN, ICHNK
+
+      REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+
+! ----------------------------------------------------------------------
+ 
+      IF (LHOOK) CALL DR_HOOK('WVALLOC',0,ZHOOK_HANDLE)
+
+!     1.  ALLOCATE NECESSARY ARRAYS
+!         -------------------------
+
+#ifdef WAM_HAVE_HIC
+!.... Enable pinning of fields in page-locked memory
+      INIT_PINNED_VALUE=.TRUE.
+#endif
+
+      IF (.NOT. WVPRPT%LALLOC)THEN
+         CALL ALLOC(WVPRPT, UBOUNDS=[NPROMA_WAM, NFRE, NCHNK])
+      ENDIF
+
+      IF (.NOT. FF_NOW%LALLOC) THEN
+         CALL ALLOC(FF_NOW, UBOUNDS=[NPROMA_WAM, NCHNK])
+      ENDIF
+
+      IF (.NOT. VARS_4D%LALLOC) THEN
+        CALL ALLOC(VARS_4D, UBOUNDS=[NPROMA_WAM, NANG, NFRE, NCHNK])
+      ENDIF
+
+      IF(.NOT. MIJ%LALLOC)THEN
+        CALL ALLOC(MIJ, UBOUNDS=[NPROMA_WAM, NCHNK])
+      ENDIF
+
+      IF (.NOT. INTFLDS%LALLOC) THEN
+        CALL ALLOC(INTFLDS, UBOUNDS=[NPROMA_WAM, NCHNK])
+        INTFLDS%ALTWH(:,:)   = ZMISS
+        INTFLDS%CALTWH(:,:)  = ZMISS
+        INTFLDS%RALTCOR(:,:) = ZMISS
+      ENDIF
+
+
+      IF (.NOT. FF_NEXT%LALLOC) THEN
+         CALL ALLOC(FF_NEXT, UBOUNDS=[NPROMA_WAM,NCHNK])
+      ENDIF
+
+
+      IF (.NOT. WAM2NEMO%LALLOC) THEN
+        CALL ALLOC(WAM2NEMO, UBOUNDS=[NPROMA_WAM, NCHNK])
+      ENDIF
+
+      IF (.NOT. NEMO2WAM%LALLOC) THEN
+        CALL ALLOC(NEMO2WAM, UBOUNDS=[NPROMA_WAM, NCHNK])
+      ENDIF
+
+      IF (.NOT. WVPRPT_LAND%LALLOC) CALL ALLOC(WVPRPT_LAND, UBOUNDS=[NFRE])
+
+#ifdef WAM_HAVE_HIC
+!.... Enable pinning of fields in page-locked memory
+      INIT_PINNED_VALUE=.FALSE.
+#endif
+
+      IF (LHOOK) CALL DR_HOOK('WVALLOC',1,ZHOOK_HANDLE)
+ 
+      END SUBROUTINE WVALLOC

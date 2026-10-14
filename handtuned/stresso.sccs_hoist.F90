@@ -1,0 +1,402 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+MODULE STRESSO_LOKI_MOD
+  CONTAINS
+  SUBROUTINE STRESSO_LOKI (KIJS, KIJL, MIJ, RHOWGDFTH, FL1, SL, SPOS, CINV, WDWAVE, UFRIC, Z0M, AIRD, RNFAC, COSWDIF, SINWDIF2,  &
+  & TAUW, TAUWDIR, PHIWA, LLPHIWA, IJ)
+
+    ! ----------------------------------------------------------------------
+
+    !**** *STRESSO* - COMPUTATION OF WAVE STRESS.
+
+    !     H. GUNTHER      GKSS/ECMWF NOVEMBER   1989 CODE MOVED FROM SINPUT.
+    !     P.A.E.M. JANSSEN     KNMI  AUGUST     1990
+    !     J. BIDLOT            ECMWF FEBRUARY   1996-97
+    !     S. ABDALLA           ECMWF OCTOBER    2001 INTRODUCTION OF VARIABLE
+    !                                                AIR DENSITY
+    !     P.A.E.M. JANSSEN     ECMWF            2011  ADD FLUX CALULATIONS
+
+    !*    PURPOSE.
+    !     --------
+
+    !       COMPUTE NORMALIZED WAVE STRESS FROM INPUT SOURCE FUNCTION
+
+    !**   INTERFACE.
+    !     ----------
+
+    !        *CALL* *STRESSO (KIJS, KIJL, MIJ, RHOWGDFTH,
+    !                         FL1, SL, SPOS,
+    !    &                    CINV,
+    !    &                    WDWAVE, UFRIC, Z0M, AIRD, RNFAC,
+    !    &                    COSWDIF, SINWDIF2,
+    !    &                    TAUW, TAUWDIR, PHIWA)*
+    !         *KIJS*        - INDEX OF FIRST GRIDPOINT.
+    !         *KIJL*        - INDEX OF LAST GRIDPOINT.
+    !         *MIJ*         - LAST FREQUENCY INDEX OF THE PROGNOSTIC RANGE.
+    !         *RHOWGDFTH    - WATER DENSITY * G * DF * DTHETA
+    !         *FL1*         - WAVE SPECTRUM.
+    !         *SL*          - WIND INPUT SOURCE FUNCTION ARRAY (positive and negative contributions).
+    !         *SPOS*        - POSITIVE WIND INPUT SOURCE FUNCTION ARRAY.
+    !         *CINV*        - INVERSE PHASE VELOCITY.
+    !         *WDWAVE*      - WIND DIRECTION IN RADIANS IN OCEANOGRAPHIC
+    !                         NOTATION (POINTING ANGLE OF WIND VECTOR,
+    !                         CLOCKWISE FROM NORTH).
+    !         *UFRIC*       - FRICTION VELOCITY IN M/S.
+    !         *Z0M*         - ROUGHNESS LENGTH IN M.
+    !         *AIRD*        - AIR DENSITY IN KG/M**3.
+    !         *RNFAC*       - WIND DEPENDENT FACTOR USED IN THE GROWTH RENORMALISATION.
+    !         *COSWDIF*     - COS(TH(K)-WDWAVE(IJ))
+    !         *SINWDIF2*    - SIN(TH(K)-WDWAVE(IJ))**2
+    !         *TAUW*        - KINEMATIC WAVE STRESS IN (M/S)**2
+    !         *TAUWDIR*     - KINEMATIC WAVE STRESS DIRECTION
+    !         *PHIWA*       - ENERGY FLUX FROM WIND INTO WAVES INTEGRATED
+    !                         OVER THE FULL FREQUENCY RANGE.
+    !         *LLPHIWA*     - TRUE IF PHIWA NEEDS TO BE COMPUTED
+
+    !     METHOD.
+    !     -------
+
+    !       THE INPUT SOURCE FUNCTION IS INTEGRATED OVER FREQUENCY
+    !       AND DIRECTIONS.
+    !       BECAUSE ARRAY *SPOS* IS USED, ONLY THE INPUT SOURCE
+    !       HAS TO BE STORED IN *SPOS* (CALL FIRST SINPUT, THEN
+    !       STRESSO, AND THEN THE REST OF THE SOURCE FUNCTIONS)
+
+    !     REFERENCE.
+    !     ----------
+    !       P. JANSSEN,
+
+    ! ----------------------------------------------------------------------
+    USE NS_GC_LOKI_MOD, ONLY: NS_GC_LOKI
+    USE YOWPCONS, ONLY: G, GM1, ZPI, ZPI4GM1, ZPI4GM2
+    USE YOWTEST, ONLY: IU06
+    USE PARKIND_WAVE, ONLY: JWIM, JWRB, JWRU
+
+    USE YOWCOUP, ONLY: LLGCBZ0, X0TAUHF, JTOT_TAUHF, WTAUHF, LLNORMAGAM
+    USE YOWFRED, ONLY: FR, RHOWG_DFIM, DELTH, TH, COSTH, SINTH, FR5, ZPIFR, OMEGA_GC, XK_GC
+    USE YOWPARAM, ONLY: NANG, NFRE
+    USE YOWPHYS, ONLY: TAUWSHELTER, ZALP, XKAPPA, GAMNCONST
+    USE YOWTABL, ONLY: EPS1
+    USE YOWSTAT, ONLY: IPHYS
+
+    USE YOMHOOK, ONLY: LHOOK, JPHOOK
+
+    ! ----------------------------------------------------------------------
+
+    IMPLICIT NONE
+    INTEGER(KIND=JWIM), INTENT(IN) :: KIJS, KIJL
+    INTEGER(KIND=JWIM), INTENT(IN) :: MIJ(KIJL)
+    REAL(KIND=JWRB), INTENT(IN), DIMENSION(KIJL, NFRE) :: RHOWGDFTH
+    REAL(KIND=JWRB), INTENT(IN), DIMENSION(KIJL, NANG, NFRE) :: FL1, SL, SPOS
+    REAL(KIND=JWRB), INTENT(IN), DIMENSION(KIJL, NFRE) :: CINV
+    REAL(KIND=JWRB), INTENT(IN), DIMENSION(KIJL) :: WDWAVE, UFRIC, Z0M, AIRD, RNFAC
+    REAL(KIND=JWRB), INTENT(IN), DIMENSION(KIJL, NANG) :: COSWDIF, SINWDIF2
+    REAL(KIND=JWRB), INTENT(OUT), DIMENSION(KIJL) :: TAUW, TAUWDIR, PHIWA
+    LOGICAL, INTENT(IN) :: LLPHIWA
+
+
+    INTEGER(KIND=JWIM) :: STRESSO_M, STRESSO_K, STRESSO_I, STRESSO_J, II
+    INTEGER(KIND=JWIM), INTENT(IN) :: IJ
+
+    REAL(KIND=JWRB) :: TAUTOUS2
+    REAL(KIND=JWRB) :: COSW, FCOSW2
+    REAL(KIND=JPHOOK) :: STRESSO_ZHOOK_HANDLE
+    REAL(KIND=JWRB) :: STRESSO_XSTRESS, STRESSO_YSTRESS
+    REAL(KIND=JWRB) :: TAUHF, PHIHF
+    REAL(KIND=JWRB) :: CMRHOWGDFTH
+    REAL(KIND=JWRB) :: US2, STRESSO_TAUX, STRESSO_TAUY, STRESSO_TAUPX, STRESSO_TAUPY
+    REAL(KIND=JWRB) :: STRESSO_USDIRP, UST
+    REAL(KIND=JWRB) :: SUMT, SUMX, SUMY
+
+    LOGICAL :: STRESSO_LTAUWSHELTER
+    INTEGER(KIND=JWIM) :: TAU_PHI_HF_J, TAU_PHI_HF_K
+    INTEGER(KIND=JWIM) :: NS
+    REAL(KIND=JWRB), PARAMETER :: ZSUPMAX = 0.0_JWRB    !  LOG(1.)
+    REAL(KIND=JWRB) :: OMEGA, OMEGACC
+    REAL(KIND=JWRB) :: X0G
+    REAL(KIND=JWRB) :: YC, Y, CM1, ZX, ZARG, STRESSO_ZLOG, ZBETA
+    REAL(KIND=JWRB) :: FNC, FNC2
+    REAL(KIND=JWRB) :: STRESSO_GAMNORMA    ! RENORMALISATION FACTOR OF THE GROWTH RATE
+    REAL(KIND=JWRB) :: STRESSO_ZNZ, CONFG
+    REAL(KIND=JWRB) :: TAU_PHI_HF_COSW, TAU_PHI_HF_FCOSW2
+    REAL(KIND=JPHOOK) :: TAU_PHI_HF_ZHOOK_HANDLE
+    REAL(KIND=JWRB) :: XKS, OMS
+    REAL(KIND=JWRB) :: SQRTZ0OG, ZSUP, ZINF, DELZ
+    REAL(KIND=JWRB) :: TAUL, XLOGGZ0, SQRTGZ0
+    REAL(KIND=JWRB) :: USTPH
+    REAL(KIND=JWRB) :: STRESSO_CONST1, CONST2, CONSTTAU, CONSTPHI
+    REAL(KIND=JWRB) :: F1DCOS2, F1DCOS3
+    REAL(KIND=JWRB) :: STRESSO_F1D, F1DSIN2
+    REAL(KIND=JPHOOK) :: OMEGAGC_ZHOOK_HANDLE
+!$acc routine seq
+!$acc data present( MIJ, RHOWGDFTH, FL1, SL, SPOS, CINV, WDWAVE, UFRIC, Z0M, AIRD, RNFAC, COSWDIF, SINWDIF2, TAUW, TAUWDIR,  &
+!$acc & PHIWA )
+
+    ! ----------------------------------------------------------------------
+
+
+    PHIWA(IJ) = 0.0_JWRB
+    STRESSO_XSTRESS = 0.0_JWRB
+    STRESSO_YSTRESS = 0.0_JWRB
+
+    !*    CONTRIBUTION TO THE WAVE STRESS FROM THE NEGATIVE PART OF THE WIND INPUT
+    !     ------------------------------------------------------------------------
+
+    IF (LLPHIWA) THEN
+      !     full energy flux due to negative Sinput (SL-SPOS)
+      !     we assume that above NFRE, the contibutions can be neglected
+!$acc loop seq
+      DO STRESSO_M=1,NFRE
+!$acc loop seq
+        DO STRESSO_K=1,NANG
+          PHIWA(IJ) = PHIWA(IJ) + (SL(IJ, STRESSO_K, STRESSO_M) - SPOS(IJ, STRESSO_K, STRESSO_M))*RHOWG_DFIM(STRESSO_M)
+        END DO
+      END DO
+    END IF
+
+    !*    CALCULATE LOW-FREQUENCY CONTRIBUTION TO STRESS AND ENERGY FLUX (positive sinput).
+    !     ---------------------------------------------------------------------------------
+!$acc loop seq
+    DO STRESSO_M=1,NFRE
+      !     THE INTEGRATION ONLY UP TO FR=MIJ SINCE RHOWGDFTH=0 FOR FR>MIJ
+      STRESSO_K = 1
+      SUMX = SPOS(IJ, STRESSO_K, STRESSO_M)*SINTH(STRESSO_K)
+      SUMY = SPOS(IJ, STRESSO_K, STRESSO_M)*COSTH(STRESSO_K)
+      SUMT = SPOS(IJ, STRESSO_K, STRESSO_M)
+!$acc loop seq
+      DO STRESSO_K=2,NANG
+        SUMX = SUMX + SPOS(IJ, STRESSO_K, STRESSO_M)*SINTH(STRESSO_K)
+        SUMY = SUMY + SPOS(IJ, STRESSO_K, STRESSO_M)*COSTH(STRESSO_K)
+        SUMT = SUMT + SPOS(IJ, STRESSO_K, STRESSO_M)
+      END DO
+      CMRHOWGDFTH = RHOWGDFTH(IJ, STRESSO_M)*CINV(IJ, STRESSO_M)
+      STRESSO_XSTRESS = STRESSO_XSTRESS + CMRHOWGDFTH*SUMX
+      STRESSO_YSTRESS = STRESSO_YSTRESS + CMRHOWGDFTH*SUMY
+
+      IF (LLPHIWA) THEN
+        PHIWA(IJ) = PHIWA(IJ) + RHOWGDFTH(IJ, STRESSO_M)*SUMT
+      END IF
+    END DO
+
+    !     TAUW is the kinematic wave stress !
+    STRESSO_XSTRESS = STRESSO_XSTRESS / MAX(AIRD(IJ), 1.0_JWRB)
+    STRESSO_YSTRESS = STRESSO_YSTRESS / MAX(AIRD(IJ), 1.0_JWRB)
+
+
+    !*    CALCULATE HIGH-FREQUENCY CONTRIBUTION TO STRESS and energy flux (positive sinput).
+    !     ----------------------------------------------------------------------------------
+
+    IF (IPHYS == 0 .or. TAUWSHELTER == 0.0_JWRB) THEN
+      STRESSO_LTAUWSHELTER = .false.
+      STRESSO_USDIRP = WDWAVE(IJ)
+      UST = UFRIC(IJ)
+    ELSE
+      STRESSO_LTAUWSHELTER = .true.
+      STRESSO_TAUX = UFRIC(IJ)**2*SIN(WDWAVE(IJ))
+      STRESSO_TAUY = UFRIC(IJ)**2*COS(WDWAVE(IJ))
+      STRESSO_TAUPX = STRESSO_TAUX - TAUWSHELTER*STRESSO_XSTRESS
+      STRESSO_TAUPY = STRESSO_TAUY - TAUWSHELTER*STRESSO_YSTRESS
+      STRESSO_USDIRP = ATAN2(STRESSO_TAUPX, STRESSO_TAUPY)
+      UST = (STRESSO_TAUPX**2 + STRESSO_TAUPY**2)**0.25_JWRB
+    END IF
+
+    ! [Loki] inlined child subroutine: TAU_PHI_HF
+    ! =========================================
+
+
+    ! ----------------------------------------------------------------------
+
+
+    IF (LLGCBZ0) THEN
+      ! [Loki] inlined child subroutine: OMEGAGC
+      ! =========================================
+      ! ----------------------------------------------------------------------
+
+
+      NS = NS_GC_LOKI(UFRIC(IJ))
+      XKS = XK_GC(NS)
+      OMS = OMEGA_GC(NS)
+
+
+      ! =========================================
+    END IF
+
+    !     See INIT_X0TAUHF
+    X0G = X0TAUHF*G
+
+    IF (LLPHIWA) USTPH = UST
+
+    !*    COMPUTE THE INTEGRALS
+    !     ---------------------
+
+    XLOGGZ0 = LOG(G*Z0M(IJ))
+    OMEGACC = MAX(ZPIFR(MIJ(IJ)), X0G / UST)
+    SQRTZ0OG = SQRT(Z0M(IJ)*GM1)
+    SQRTGZ0 = 1.0_JWRB / SQRTZ0OG
+    YC = OMEGACC*SQRTZ0OG
+    ZINF = LOG(YC)
+
+    CONSTTAU = ZPI4GM2*FR5(MIJ(IJ))
+
+    TAU_PHI_HF_K = 1
+    TAU_PHI_HF_COSW = MAX(COSWDIF(IJ, TAU_PHI_HF_K), 0.0_JWRB)
+    TAU_PHI_HF_FCOSW2 = FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))*TAU_PHI_HF_COSW**2
+    F1DCOS3 = TAU_PHI_HF_FCOSW2*TAU_PHI_HF_COSW
+    F1DCOS2 = TAU_PHI_HF_FCOSW2
+    F1DSIN2 = FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))*SINWDIF2(IJ, TAU_PHI_HF_K)
+    STRESSO_F1D = FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))
+!$acc loop seq
+    DO TAU_PHI_HF_K=2,NANG
+      TAU_PHI_HF_COSW = MAX(COSWDIF(IJ, TAU_PHI_HF_K), 0.0_JWRB)
+      TAU_PHI_HF_FCOSW2 = FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))*TAU_PHI_HF_COSW**2
+      F1DCOS3 = F1DCOS3 + TAU_PHI_HF_FCOSW2*TAU_PHI_HF_COSW
+      F1DCOS2 = F1DCOS2 + TAU_PHI_HF_FCOSW2
+      F1DSIN2 = F1DSIN2 + FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))*SINWDIF2(IJ, TAU_PHI_HF_K)
+      STRESSO_F1D = STRESSO_F1D + FL1(IJ, TAU_PHI_HF_K, MIJ(IJ))
+    END DO
+    F1DCOS3 = DELTH*F1DCOS3
+    F1DCOS2 = DELTH*F1DCOS2
+    F1DSIN2 = DELTH*F1DSIN2
+    STRESSO_F1D = DELTH*STRESSO_F1D
+
+    IF (LLNORMAGAM) THEN
+      CONFG = GAMNCONST*FR5(MIJ(IJ))*RNFAC(IJ)*SQRTGZ0
+      STRESSO_CONST1 = CONFG*F1DSIN2
+      CONST2 = CONFG*STRESSO_F1D
+    ELSE
+      STRESSO_CONST1 = 0.0_JWRB
+      CONST2 = 0.0_JWRB
+    END IF
+
+
+    !     TAUHF :
+    IF (LLGCBZ0) THEN
+      ZSUP = MIN(LOG(OMS*SQRTZ0OG), ZSUPMAX)
+    ELSE
+      ZSUP = ZSUPMAX
+    END IF
+
+    TAUL = UST**2
+    DELZ = MAX((ZSUP - ZINF) / REAL(JTOT_TAUHF - 1, kind=JWRB), 0.0_JWRB)
+    TAUHF = 0.0_JWRB
+
+    ! Intergrals are integrated following a change of variable : Z=LOG(Y)
+    IF (STRESSO_LTAUWSHELTER) THEN
+!$acc loop seq
+      DO TAU_PHI_HF_J=1,JTOT_TAUHF
+        Y = EXP(ZINF + REAL(TAU_PHI_HF_J - 1, kind=JWRB)*DELZ)
+        OMEGA = Y*SQRTGZ0
+        CM1 = OMEGA*GM1
+        ZX = UST*CM1 + ZALP
+        ZARG = XKAPPA / ZX
+        STRESSO_ZLOG = XLOGGZ0 + 2.0_JWRB*LOG(CM1) + ZARG
+        STRESSO_ZLOG = MIN(STRESSO_ZLOG, 0.0_JWRB)
+        ZBETA = STRESSO_ZLOG**4*EXP(STRESSO_ZLOG)
+        STRESSO_ZNZ = ZBETA*UST*Y
+        STRESSO_GAMNORMA = (1.0_JWRB + STRESSO_CONST1*STRESSO_ZNZ) / (1.0_JWRB + CONST2*STRESSO_ZNZ)
+        FNC2 = F1DCOS3*CONSTTAU*ZBETA*TAUL*WTAUHF(TAU_PHI_HF_J)*DELZ*STRESSO_GAMNORMA
+        TAUL = MAX(TAUL - TAUWSHELTER*FNC2, 0.0_JWRB)
+
+        UST = SQRT(TAUL)
+        TAUHF = TAUHF + FNC2
+      END DO
+    ELSE
+!$acc loop seq
+      DO TAU_PHI_HF_J=1,JTOT_TAUHF
+        Y = EXP(ZINF + REAL(TAU_PHI_HF_J - 1, kind=JWRB)*DELZ)
+        OMEGA = Y*SQRTGZ0
+        CM1 = OMEGA*GM1
+        ZX = UST*CM1 + ZALP
+        ZARG = XKAPPA / ZX
+        STRESSO_ZLOG = XLOGGZ0 + 2.0_JWRB*LOG(CM1) + ZARG
+        STRESSO_ZLOG = MIN(STRESSO_ZLOG, 0.0_JWRB)
+        ZBETA = STRESSO_ZLOG**4*EXP(STRESSO_ZLOG)
+        FNC2 = ZBETA*WTAUHF(TAU_PHI_HF_J)
+        STRESSO_ZNZ = ZBETA*UST*Y
+        STRESSO_GAMNORMA = (1.0_JWRB + STRESSO_CONST1*STRESSO_ZNZ) / (1.0_JWRB + CONST2*STRESSO_ZNZ)
+        TAUHF = TAUHF + FNC2*STRESSO_GAMNORMA
+      END DO
+      TAUHF = F1DCOS3*CONSTTAU*TAUL*TAUHF*DELZ
+    END IF
+
+
+    PHIHF = 0.0_JWRB
+    IF (LLPHIWA) THEN
+      !       PHIHF:
+      !       We are neglecting the gravity-capillary contribution
+      !       Recompute DELZ over the full interval
+      TAUL = USTPH**2
+      ZSUP = ZSUPMAX
+      DELZ = MAX((ZSUP - ZINF) / REAL(JTOT_TAUHF - 1, kind=JWRB), 0.0_JWRB)
+
+      CONSTPHI = AIRD(IJ)*ZPI4GM1*FR5(MIJ(IJ))
+
+      ! Intergrals are integrated following a change of variable : Z=LOG(Y)
+      IF (STRESSO_LTAUWSHELTER) THEN
+!$acc loop seq
+        DO TAU_PHI_HF_J=1,JTOT_TAUHF
+          Y = EXP(ZINF + REAL(TAU_PHI_HF_J - 1, kind=JWRB)*DELZ)
+          OMEGA = Y*SQRTGZ0
+          CM1 = OMEGA*GM1
+          ZX = USTPH*CM1 + ZALP
+          ZARG = XKAPPA / ZX
+          STRESSO_ZLOG = XLOGGZ0 + 2.0_JWRB*LOG(CM1) + ZARG
+          STRESSO_ZLOG = MIN(STRESSO_ZLOG, 0.0_JWRB)
+          ZBETA = STRESSO_ZLOG**4*EXP(STRESSO_ZLOG)
+          STRESSO_ZNZ = ZBETA*UST*Y
+          STRESSO_GAMNORMA = (1.0_JWRB + STRESSO_CONST1*STRESSO_ZNZ) / (1.0_JWRB + CONST2*STRESSO_ZNZ)
+          FNC2 = ZBETA*TAUL*WTAUHF(TAU_PHI_HF_J)*DELZ*STRESSO_GAMNORMA
+          TAUL = MAX(TAUL - TAUWSHELTER*F1DCOS3*CONSTTAU*FNC2, 0.0_JWRB)
+          USTPH = SQRT(TAUL)
+          PHIHF = PHIHF + FNC2 / Y
+        END DO
+        PHIHF = F1DCOS2*CONSTPHI*SQRTZ0OG*PHIHF
+      ELSE
+!$acc loop seq
+        DO TAU_PHI_HF_J=1,JTOT_TAUHF
+          Y = EXP(ZINF + REAL(TAU_PHI_HF_J - 1, kind=JWRB)*DELZ)
+          OMEGA = Y*SQRTGZ0
+          CM1 = OMEGA*GM1
+          ZX = USTPH*CM1 + ZALP
+          ZARG = XKAPPA / ZX
+          STRESSO_ZLOG = XLOGGZ0 + 2.0_JWRB*LOG(CM1) + ZARG
+          STRESSO_ZLOG = MIN(STRESSO_ZLOG, 0.0_JWRB)
+          ZBETA = STRESSO_ZLOG**4*EXP(STRESSO_ZLOG)
+          STRESSO_ZNZ = ZBETA*UST*Y
+          STRESSO_GAMNORMA = (1.0_JWRB + STRESSO_CONST1*STRESSO_ZNZ) / (1.0_JWRB + CONST2*STRESSO_ZNZ)
+          FNC2 = ZBETA*WTAUHF(TAU_PHI_HF_J)*STRESSO_GAMNORMA
+          PHIHF = PHIHF + FNC2 / Y
+        END DO
+        PHIHF = F1DCOS2*CONSTPHI*SQRTZ0OG*TAUL*PHIHF*DELZ
+      END IF
+    END IF
+
+
+    ! =========================================
+
+    STRESSO_XSTRESS = STRESSO_XSTRESS + TAUHF*SIN(STRESSO_USDIRP)
+    STRESSO_YSTRESS = STRESSO_YSTRESS + TAUHF*COS(STRESSO_USDIRP)
+    TAUW(IJ) = SQRT(STRESSO_XSTRESS**2 + STRESSO_YSTRESS**2)
+    TAUW(IJ) = MAX(TAUW(IJ), 0.0_JWRB)
+    TAUWDIR(IJ) = ATAN2(STRESSO_XSTRESS, STRESSO_YSTRESS)
+
+    IF (.not.LLGCBZ0) THEN
+      TAUTOUS2 = 1.0_JWRB / (1.0_JWRB + EPS1)
+      TAUW(IJ) = MIN(TAUW(IJ), UFRIC(IJ)**2*TAUTOUS2)
+    END IF
+
+    IF (LLPHIWA) THEN
+      PHIWA(IJ) = PHIWA(IJ) + PHIHF
+    END IF
+
+
+
+!$acc end data
+  END SUBROUTINE STRESSO_LOKI
+END MODULE STRESSO_LOKI_MOD

@@ -1,0 +1,1147 @@
+MODULE FREQUENCY_TYPE_MOD
+
+   USE PARKIND_WAVE, ONLY : JWRB, JWIM, JWRO
+   USE FIELD_MODULE, ONLY : FIELD_3RB, FIELD_2IM, FIELD_2RB, FIELD_3IM, FIELD_4RB, FIELD_4IM, FIELD_2RD, &
+   &                        FIELD_2RM, FIELD_1IM, FIELD_1RB
+   USE FIELD_FACTORY_MODULE, ONLY : FIELD_NEW, FIELD_DELETE
+   IMPLICIT NONE
+
+   PRIVATE
+
+   INTERFACE ALLOC
+      MODULE PROCEDURE FREQUENCY_ALLOC
+   END INTERFACE ALLOC
+   INTERFACE DEALLOC
+      MODULE PROCEDURE FREQUENCY_DEALLOC
+   END INTERFACE DEALLOC
+   INTERFACE SYNC_DEVICE_RDWR
+      MODULE PROCEDURE FREQUENCY_SYNC_DEVICE_RDWR
+   END INTERFACE SYNC_DEVICE_RDWR
+   INTERFACE SYNC_DEVICE_RDONLY
+      MODULE PROCEDURE FREQUENCY_SYNC_DEVICE_RDONLY
+   END INTERFACE SYNC_DEVICE_RDONLY
+   INTERFACE SYNC_HOST_RDWR
+      MODULE PROCEDURE FREQUENCY_SYNC_HOST_RDWR
+   END INTERFACE SYNC_HOST_RDWR
+   INTERFACE SYNC_HOST_RDONLY
+      MODULE PROCEDURE FREQUENCY_SYNC_HOST_RDONLY
+   END INTERFACE SYNC_HOST_RDONLY
+   INTERFACE GET_DEVICE_DATA_RDWR
+      MODULE PROCEDURE FREQUENCY_GET_DEVICE_DATA_RDWR
+   END INTERFACE GET_DEVICE_DATA_RDWR
+   INTERFACE GET_DEVICE_DATA_RDONLY
+      MODULE PROCEDURE FREQUENCY_GET_DEVICE_DATA_RDONLY
+   END INTERFACE GET_DEVICE_DATA_RDONLY
+   INTERFACE GET_DEVICE_DATA_WRONLY
+      MODULE PROCEDURE FREQUENCY_GET_DEVICE_DATA_WRONLY
+   END INTERFACE GET_DEVICE_DATA_WRONLY
+   INTERFACE GET_HOST_DATA_RDWR
+      MODULE PROCEDURE FREQUENCY_GET_HOST_DATA_RDWR
+   END INTERFACE GET_HOST_DATA_RDWR
+   INTERFACE GET_HOST_DATA_RDONLY
+      MODULE PROCEDURE FREQUENCY_GET_HOST_DATA_RDONLY
+   END INTERFACE GET_HOST_DATA_RDONLY
+   INTERFACE DELETE_DEVICE_DATA
+      MODULE PROCEDURE FREQUENCY_DELETE_DEVICE_DATA
+   END INTERFACE DELETE_DEVICE_DATA
+
+   TYPE FREQUENCY
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_WAVNUM => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: WAVNUM(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_WAVNUM => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: WAVNUM(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CINV => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CINV(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CINV => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CINV(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CGROUP => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CGROUP(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CGROUP => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CGROUP(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_XK2CG => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: XK2CG(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_XK2CG => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: XK2CG(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_OMOSNH2KD => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: OMOSNH2KD(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_OMOSNH2KD => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: OMOSNH2KD(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_STOKFAC => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: STOKFAC(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_STOKFAC => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: STOKFAC(:,:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CIWA => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CIWA(:,:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_3RB), POINTER :: F_CIWA => NULL()
+      REAL(KIND=JWRB), POINTER, CONTIGUOUS :: CIWA(:,:,:) => NULL()
+#endif
+      LOGICAL :: LALLOC = .FALSE.
+   END TYPE FREQUENCY
+
+   PUBLIC :: FREQUENCY, ALLOC, DEALLOC
+   PUBLIC :: SYNC_DEVICE_RDWR, SYNC_DEVICE_RDONLY, SYNC_HOST_RDWR, SYNC_HOST_RDONLY, GET_DEVICE_DATA_RDWR, GET_DEVICE_DATA_RDONLY,&
+       & GET_DEVICE_DATA_WRONLY, GET_HOST_DATA_RDWR, GET_HOST_DATA_RDONLY, DELETE_DEVICE_DATA
+
+   CONTAINS
+
+   SUBROUTINE FREQUENCY_ALLOC(SELF, UBOUNDS, LBOUNDS)
+      TYPE(FREQUENCY) :: SELF
+      INTEGER(KIND=JWIM), INTENT(IN) :: UBOUNDS(3)
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: LBOUNDS(3)
+      INTEGER(KIND=JWIM) :: LLBOUNDS(3)
+
+      LLBOUNDS(:) = 1
+      IF(PRESENT(LBOUNDS)) LLBOUNDS = LBOUNDS
+
+      CALL FIELD_NEW(SELF%F_WAVNUM, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_WAVNUM%GET_HOST_DATA_RDWR(SELF%WAVNUM)
+      SELF%WAVNUM(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_CINV, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_CINV%GET_HOST_DATA_RDWR(SELF%CINV)
+      SELF%CINV(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_CGROUP, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_CGROUP%GET_HOST_DATA_RDWR(SELF%CGROUP)
+      SELF%CGROUP(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_XK2CG, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_XK2CG%GET_HOST_DATA_RDWR(SELF%XK2CG)
+      SELF%XK2CG(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_OMOSNH2KD, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_OMOSNH2KD%GET_HOST_DATA_RDWR(SELF%OMOSNH2KD)
+      SELF%OMOSNH2KD(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_STOKFAC, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_STOKFAC%GET_HOST_DATA_RDWR(SELF%STOKFAC)
+      SELF%STOKFAC(:,:,:) = 0_JWRB
+      CALL FIELD_NEW(SELF%F_CIWA, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_CIWA%GET_HOST_DATA_RDWR(SELF%CIWA)
+      SELF%CIWA(:,:,:) = 0_JWRB
+
+      SELF%LALLOC = .TRUE.
+#ifdef OMPGPU
+      !$omp target enter data map(to:SELF)
+#else
+      !$acc enter data copyin(SELF)
+#endif
+
+   END SUBROUTINE FREQUENCY_ALLOC
+
+   SUBROUTINE FREQUENCY_DEALLOC(SELF)
+      TYPE(FREQUENCY) :: SELF
+
+      NULLIFY(SELF%WAVNUM)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%WAVNUM)
+#else
+      !$acc exit data detach(SELF%WAVNUM)
+#endif
+      CALL FIELD_DELETE(SELF%F_WAVNUM)
+      NULLIFY(SELF%F_WAVNUM)
+      NULLIFY(SELF%CINV)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%CINV)
+#else
+      !$acc exit data detach(SELF%CINV)
+#endif
+      CALL FIELD_DELETE(SELF%F_CINV)
+      NULLIFY(SELF%F_CINV)
+      NULLIFY(SELF%CGROUP)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%CGROUP)
+#else
+      !$acc exit data detach(SELF%CGROUP)
+#endif
+      CALL FIELD_DELETE(SELF%F_CGROUP)
+      NULLIFY(SELF%F_CGROUP)
+      NULLIFY(SELF%XK2CG)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%XK2CG)
+#else
+      !$acc exit data detach(SELF%XK2CG)
+#endif
+      CALL FIELD_DELETE(SELF%F_XK2CG)
+      NULLIFY(SELF%F_XK2CG)
+      NULLIFY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%OMOSNH2KD)
+#else
+      !$acc exit data detach(SELF%OMOSNH2KD)
+#endif
+      CALL FIELD_DELETE(SELF%F_OMOSNH2KD)
+      NULLIFY(SELF%F_OMOSNH2KD)
+      NULLIFY(SELF%STOKFAC)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%STOKFAC)
+#else
+      !$acc exit data detach(SELF%STOKFAC)
+#endif
+      CALL FIELD_DELETE(SELF%F_STOKFAC)
+      NULLIFY(SELF%F_STOKFAC)
+      NULLIFY(SELF%CIWA)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%CIWA)
+#else
+      !$acc exit data detach(SELF%CIWA)
+#endif
+      CALL FIELD_DELETE(SELF%F_CIWA)
+      NULLIFY(SELF%F_CIWA)
+
+      SELF%LALLOC = .FALSE.
+#ifdef OMPGPU
+      !$omp target exit data map(delete:SELF)
+#else
+      !$acc exit data delete(SELF)
+#endif
+
+   END SUBROUTINE FREQUENCY_DEALLOC
+
+   SUBROUTINE FREQUENCY_GET_DEVICE_DATA_RDWR(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%GET_DEVICE_DATA_RDWR(SELF%WAVNUM)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%WAVNUM)
+#else
+             !$acc enter data attach(SELF%WAVNUM)
+#endif
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%GET_DEVICE_DATA_RDWR(SELF%CINV)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CINV)
+#else
+             !$acc enter data attach(SELF%CINV)
+#endif
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%GET_DEVICE_DATA_RDWR(SELF%CGROUP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CGROUP)
+#else
+             !$acc enter data attach(SELF%CGROUP)
+#endif
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%GET_DEVICE_DATA_RDWR(SELF%XK2CG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%XK2CG)
+#else
+             !$acc enter data attach(SELF%XK2CG)
+#endif
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_RDWR(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+             !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%GET_DEVICE_DATA_RDWR(SELF%STOKFAC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%STOKFAC)
+#else
+             !$acc enter data attach(SELF%STOKFAC)
+#endif
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%GET_DEVICE_DATA_RDWR(SELF%CIWA)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CIWA)
+#else
+             !$acc enter data attach(SELF%CIWA)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%GET_DEVICE_DATA_RDWR(SELF%WAVNUM)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%WAVNUM)
+#else
+         !$acc enter data attach(SELF%WAVNUM)
+#endif
+         CALL SELF%F_CINV%GET_DEVICE_DATA_RDWR(SELF%CINV)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CINV)
+#else
+         !$acc enter data attach(SELF%CINV)
+#endif
+         CALL SELF%F_CGROUP%GET_DEVICE_DATA_RDWR(SELF%CGROUP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CGROUP)
+#else
+         !$acc enter data attach(SELF%CGROUP)
+#endif
+         CALL SELF%F_XK2CG%GET_DEVICE_DATA_RDWR(SELF%XK2CG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%XK2CG)
+#else
+         !$acc enter data attach(SELF%XK2CG)
+#endif
+         CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_RDWR(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+         !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         CALL SELF%F_STOKFAC%GET_DEVICE_DATA_RDWR(SELF%STOKFAC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%STOKFAC)
+#else
+         !$acc enter data attach(SELF%STOKFAC)
+#endif
+         CALL SELF%F_CIWA%GET_DEVICE_DATA_RDWR(SELF%CIWA)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CIWA)
+#else
+         !$acc enter data attach(SELF%CIWA)
+#endif
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_GET_DEVICE_DATA_RDWR
+
+   SUBROUTINE FREQUENCY_GET_DEVICE_DATA_WRONLY(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%GET_DEVICE_DATA_WRONLY(SELF%WAVNUM)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%WAVNUM)
+#else
+             !$acc enter data attach(SELF%WAVNUM)
+#endif
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%GET_DEVICE_DATA_WRONLY(SELF%CINV)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CINV)
+#else
+             !$acc enter data attach(SELF%CINV)
+#endif
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%GET_DEVICE_DATA_WRONLY(SELF%CGROUP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CGROUP)
+#else
+             !$acc enter data attach(SELF%CGROUP)
+#endif
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%GET_DEVICE_DATA_WRONLY(SELF%XK2CG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%XK2CG)
+#else
+             !$acc enter data attach(SELF%XK2CG)
+#endif
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_WRONLY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+             !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%GET_DEVICE_DATA_WRONLY(SELF%STOKFAC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%STOKFAC)
+#else
+             !$acc enter data attach(SELF%STOKFAC)
+#endif
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%GET_DEVICE_DATA_WRONLY(SELF%CIWA)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CIWA)
+#else
+             !$acc enter data attach(SELF%CIWA)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%GET_DEVICE_DATA_WRONLY(SELF%WAVNUM)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%WAVNUM)
+#else
+         !$acc enter data attach(SELF%WAVNUM)
+#endif
+         CALL SELF%F_CINV%GET_DEVICE_DATA_WRONLY(SELF%CINV)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CINV)
+#else
+         !$acc enter data attach(SELF%CINV)
+#endif
+         CALL SELF%F_CGROUP%GET_DEVICE_DATA_WRONLY(SELF%CGROUP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CGROUP)
+#else
+         !$acc enter data attach(SELF%CGROUP)
+#endif
+         CALL SELF%F_XK2CG%GET_DEVICE_DATA_WRONLY(SELF%XK2CG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%XK2CG)
+#else
+         !$acc enter data attach(SELF%XK2CG)
+#endif
+         CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_WRONLY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+         !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         CALL SELF%F_STOKFAC%GET_DEVICE_DATA_WRONLY(SELF%STOKFAC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%STOKFAC)
+#else
+         !$acc enter data attach(SELF%STOKFAC)
+#endif
+         CALL SELF%F_CIWA%GET_DEVICE_DATA_WRONLY(SELF%CIWA)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CIWA)
+#else
+         !$acc enter data attach(SELF%CIWA)
+#endif
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_GET_DEVICE_DATA_WRONLY
+
+   SUBROUTINE FREQUENCY_GET_DEVICE_DATA_RDONLY(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%GET_DEVICE_DATA_RDONLY(SELF%WAVNUM)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%WAVNUM)
+#else
+             !$acc enter data attach(SELF%WAVNUM)
+#endif
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%GET_DEVICE_DATA_RDONLY(SELF%CINV)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CINV)
+#else
+             !$acc enter data attach(SELF%CINV)
+#endif
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%GET_DEVICE_DATA_RDONLY(SELF%CGROUP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CGROUP)
+#else
+             !$acc enter data attach(SELF%CGROUP)
+#endif
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%GET_DEVICE_DATA_RDONLY(SELF%XK2CG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%XK2CG)
+#else
+             !$acc enter data attach(SELF%XK2CG)
+#endif
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_RDONLY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+             !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%GET_DEVICE_DATA_RDONLY(SELF%STOKFAC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%STOKFAC)
+#else
+             !$acc enter data attach(SELF%STOKFAC)
+#endif
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%GET_DEVICE_DATA_RDONLY(SELF%CIWA)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%CIWA)
+#else
+             !$acc enter data attach(SELF%CIWA)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%GET_DEVICE_DATA_RDONLY(SELF%WAVNUM)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%WAVNUM)
+#else
+         !$acc enter data attach(SELF%WAVNUM)
+#endif
+         CALL SELF%F_CINV%GET_DEVICE_DATA_RDONLY(SELF%CINV)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CINV)
+#else
+         !$acc enter data attach(SELF%CINV)
+#endif
+         CALL SELF%F_CGROUP%GET_DEVICE_DATA_RDONLY(SELF%CGROUP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CGROUP)
+#else
+         !$acc enter data attach(SELF%CGROUP)
+#endif
+         CALL SELF%F_XK2CG%GET_DEVICE_DATA_RDONLY(SELF%XK2CG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%XK2CG)
+#else
+         !$acc enter data attach(SELF%XK2CG)
+#endif
+         CALL SELF%F_OMOSNH2KD%GET_DEVICE_DATA_RDONLY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%OMOSNH2KD)
+#else
+         !$acc enter data attach(SELF%OMOSNH2KD)
+#endif
+         CALL SELF%F_STOKFAC%GET_DEVICE_DATA_RDONLY(SELF%STOKFAC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%STOKFAC)
+#else
+         !$acc enter data attach(SELF%STOKFAC)
+#endif
+         CALL SELF%F_CIWA%GET_DEVICE_DATA_RDONLY(SELF%CIWA)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%CIWA)
+#else
+         !$acc enter data attach(SELF%CIWA)
+#endif
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_GET_DEVICE_DATA_RDONLY
+
+   SUBROUTINE FREQUENCY_SYNC_DEVICE_RDWR(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA, QUEUE)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CINV%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CGROUP%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_XK2CG%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_OMOSNH2KD%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_STOKFAC%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CIWA%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_SYNC_DEVICE_RDWR
+
+   SUBROUTINE FREQUENCY_SYNC_DEVICE_RDONLY(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA, QUEUE)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CINV%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CGROUP%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_XK2CG%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_OMOSNH2KD%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_STOKFAC%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CIWA%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_SYNC_DEVICE_RDONLY
+
+   SUBROUTINE FREQUENCY_GET_HOST_DATA_RDONLY(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%WAVNUM)
+#else
+             !$acc exit data detach(SELF%WAVNUM)
+#endif
+             CALL SELF%F_WAVNUM%GET_HOST_DATA_RDONLY(SELF%WAVNUM)
+         ENDIF
+         IF(L_CINV)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CINV)
+#else
+             !$acc exit data detach(SELF%CINV)
+#endif
+             CALL SELF%F_CINV%GET_HOST_DATA_RDONLY(SELF%CINV)
+         ENDIF
+         IF(L_CGROUP)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CGROUP)
+#else
+             !$acc exit data detach(SELF%CGROUP)
+#endif
+             CALL SELF%F_CGROUP%GET_HOST_DATA_RDONLY(SELF%CGROUP)
+         ENDIF
+         IF(L_XK2CG)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%XK2CG)
+#else
+             !$acc exit data detach(SELF%XK2CG)
+#endif
+             CALL SELF%F_XK2CG%GET_HOST_DATA_RDONLY(SELF%XK2CG)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%OMOSNH2KD)
+#else
+             !$acc exit data detach(SELF%OMOSNH2KD)
+#endif
+             CALL SELF%F_OMOSNH2KD%GET_HOST_DATA_RDONLY(SELF%OMOSNH2KD)
+         ENDIF
+         IF(L_STOKFAC)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%STOKFAC)
+#else
+             !$acc exit data detach(SELF%STOKFAC)
+#endif
+             CALL SELF%F_STOKFAC%GET_HOST_DATA_RDONLY(SELF%STOKFAC)
+         ENDIF
+         IF(L_CIWA)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CIWA)
+#else
+             !$acc exit data detach(SELF%CIWA)
+#endif
+             CALL SELF%F_CIWA%GET_HOST_DATA_RDONLY(SELF%CIWA)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%WAVNUM)
+#else
+         !$acc exit data detach(SELF%WAVNUM)
+#endif
+         CALL SELF%F_WAVNUM%GET_HOST_DATA_RDONLY(SELF%WAVNUM)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CINV)
+#else
+         !$acc exit data detach(SELF%CINV)
+#endif
+         CALL SELF%F_CINV%GET_HOST_DATA_RDONLY(SELF%CINV)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CGROUP)
+#else
+         !$acc exit data detach(SELF%CGROUP)
+#endif
+         CALL SELF%F_CGROUP%GET_HOST_DATA_RDONLY(SELF%CGROUP)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%XK2CG)
+#else
+         !$acc exit data detach(SELF%XK2CG)
+#endif
+         CALL SELF%F_XK2CG%GET_HOST_DATA_RDONLY(SELF%XK2CG)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%OMOSNH2KD)
+#else
+         !$acc exit data detach(SELF%OMOSNH2KD)
+#endif
+         CALL SELF%F_OMOSNH2KD%GET_HOST_DATA_RDONLY(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%STOKFAC)
+#else
+         !$acc exit data detach(SELF%STOKFAC)
+#endif
+         CALL SELF%F_STOKFAC%GET_HOST_DATA_RDONLY(SELF%STOKFAC)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CIWA)
+#else
+         !$acc exit data detach(SELF%CIWA)
+#endif
+         CALL SELF%F_CIWA%GET_HOST_DATA_RDONLY(SELF%CIWA)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_GET_HOST_DATA_RDONLY
+
+   SUBROUTINE FREQUENCY_GET_HOST_DATA_RDWR(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%WAVNUM)
+#else
+             !$acc exit data detach(SELF%WAVNUM)
+#endif
+             CALL SELF%F_WAVNUM%GET_HOST_DATA_RDWR(SELF%WAVNUM)
+         ENDIF
+         IF(L_CINV)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CINV)
+#else
+             !$acc exit data detach(SELF%CINV)
+#endif
+             CALL SELF%F_CINV%GET_HOST_DATA_RDWR(SELF%CINV)
+         ENDIF
+         IF(L_CGROUP)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CGROUP)
+#else
+             !$acc exit data detach(SELF%CGROUP)
+#endif
+             CALL SELF%F_CGROUP%GET_HOST_DATA_RDWR(SELF%CGROUP)
+         ENDIF
+         IF(L_XK2CG)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%XK2CG)
+#else
+             !$acc exit data detach(SELF%XK2CG)
+#endif
+             CALL SELF%F_XK2CG%GET_HOST_DATA_RDWR(SELF%XK2CG)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%OMOSNH2KD)
+#else
+             !$acc exit data detach(SELF%OMOSNH2KD)
+#endif
+             CALL SELF%F_OMOSNH2KD%GET_HOST_DATA_RDWR(SELF%OMOSNH2KD)
+         ENDIF
+         IF(L_STOKFAC)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%STOKFAC)
+#else
+             !$acc exit data detach(SELF%STOKFAC)
+#endif
+             CALL SELF%F_STOKFAC%GET_HOST_DATA_RDWR(SELF%STOKFAC)
+         ENDIF
+         IF(L_CIWA)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%CIWA)
+#else
+             !$acc exit data detach(SELF%CIWA)
+#endif
+             CALL SELF%F_CIWA%GET_HOST_DATA_RDWR(SELF%CIWA)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%WAVNUM)
+#else
+         !$acc exit data detach(SELF%WAVNUM)
+#endif
+         CALL SELF%F_WAVNUM%GET_HOST_DATA_RDWR(SELF%WAVNUM)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CINV)
+#else
+         !$acc exit data detach(SELF%CINV)
+#endif
+         CALL SELF%F_CINV%GET_HOST_DATA_RDWR(SELF%CINV)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CGROUP)
+#else
+         !$acc exit data detach(SELF%CGROUP)
+#endif
+         CALL SELF%F_CGROUP%GET_HOST_DATA_RDWR(SELF%CGROUP)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%XK2CG)
+#else
+         !$acc exit data detach(SELF%XK2CG)
+#endif
+         CALL SELF%F_XK2CG%GET_HOST_DATA_RDWR(SELF%XK2CG)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%OMOSNH2KD)
+#else
+         !$acc exit data detach(SELF%OMOSNH2KD)
+#endif
+         CALL SELF%F_OMOSNH2KD%GET_HOST_DATA_RDWR(SELF%OMOSNH2KD)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%STOKFAC)
+#else
+         !$acc exit data detach(SELF%STOKFAC)
+#endif
+         CALL SELF%F_STOKFAC%GET_HOST_DATA_RDWR(SELF%STOKFAC)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%CIWA)
+#else
+         !$acc exit data detach(SELF%CIWA)
+#endif
+         CALL SELF%F_CIWA%GET_HOST_DATA_RDWR(SELF%CIWA)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_GET_HOST_DATA_RDWR
+
+   SUBROUTINE FREQUENCY_SYNC_HOST_RDONLY(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA, QUEUE)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CINV%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CGROUP%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_XK2CG%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_OMOSNH2KD%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_STOKFAC%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_CIWA%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_SYNC_HOST_RDONLY
+
+   SUBROUTINE FREQUENCY_SYNC_HOST_RDWR(SELF, WAVNUM, CINV, CGROUP, XK2CG, OMOSNH2KD, STOKFAC, CIWA, QUEUE)
+      TYPE(FREQUENCY) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: WAVNUM
+      LOGICAL :: L_WAVNUM = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CINV
+      LOGICAL :: L_CINV = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CGROUP
+      LOGICAL :: L_CGROUP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: XK2CG
+      LOGICAL :: L_XK2CG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: OMOSNH2KD
+      LOGICAL :: L_OMOSNH2KD = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: STOKFAC
+      LOGICAL :: L_STOKFAC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: CIWA
+      LOGICAL :: L_CIWA = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(WAVNUM)) L_WAVNUM = WAVNUM
+     IF(PRESENT(CINV)) L_CINV = CINV
+     IF(PRESENT(CGROUP)) L_CGROUP = CGROUP
+     IF(PRESENT(XK2CG)) L_XK2CG = XK2CG
+     IF(PRESENT(OMOSNH2KD)) L_OMOSNH2KD = OMOSNH2KD
+     IF(PRESENT(STOKFAC)) L_STOKFAC = STOKFAC
+     IF(PRESENT(CIWA)) L_CIWA = CIWA
+
+
+      IF(L_WAVNUM.OR.L_CINV.OR.L_CGROUP.OR.L_XK2CG.OR.L_OMOSNH2KD.OR.L_STOKFAC.OR.L_CIWA)THEN
+         !... copy only selected members
+         IF(L_WAVNUM)THEN
+             CALL SELF%F_WAVNUM%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CINV)THEN
+             CALL SELF%F_CINV%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CGROUP)THEN
+             CALL SELF%F_CGROUP%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_XK2CG)THEN
+             CALL SELF%F_XK2CG%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_OMOSNH2KD)THEN
+             CALL SELF%F_OMOSNH2KD%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_STOKFAC)THEN
+             CALL SELF%F_STOKFAC%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_CIWA)THEN
+             CALL SELF%F_CIWA%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_WAVNUM%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CINV%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CGROUP%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_XK2CG%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_OMOSNH2KD%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_STOKFAC%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_CIWA%SYNC_HOST_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE FREQUENCY_SYNC_HOST_RDWR
+
+   SUBROUTINE FREQUENCY_DELETE_DEVICE_DATA(SELF)
+      TYPE(FREQUENCY) :: SELF
+
+      CALL SELF%F_WAVNUM%DELETE_DEVICE_DATA()
+      CALL SELF%F_CINV%DELETE_DEVICE_DATA()
+      CALL SELF%F_CGROUP%DELETE_DEVICE_DATA()
+      CALL SELF%F_XK2CG%DELETE_DEVICE_DATA()
+      CALL SELF%F_OMOSNH2KD%DELETE_DEVICE_DATA()
+      CALL SELF%F_STOKFAC%DELETE_DEVICE_DATA()
+      CALL SELF%F_CIWA%DELETE_DEVICE_DATA()
+
+   END SUBROUTINE FREQUENCY_DELETE_DEVICE_DATA
+
+END MODULE FREQUENCY_TYPE_MOD

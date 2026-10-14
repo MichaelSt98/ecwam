@@ -1,0 +1,349 @@
+MODULE MIJ_TYPE_TYPE_MOD
+
+   USE PARKIND_WAVE, ONLY : JWRB, JWIM, JWRO
+   USE FIELD_MODULE, ONLY : FIELD_3RB, FIELD_2IM, FIELD_2RB, FIELD_3IM, FIELD_4RB, FIELD_4IM, FIELD_2RD, &
+   &                        FIELD_2RM, FIELD_1IM, FIELD_1RB
+   USE FIELD_FACTORY_MODULE, ONLY : FIELD_NEW, FIELD_DELETE
+   IMPLICIT NONE
+
+   PRIVATE
+
+   INTERFACE ALLOC
+      MODULE PROCEDURE MIJ_TYPE_ALLOC
+   END INTERFACE ALLOC
+   INTERFACE DEALLOC
+      MODULE PROCEDURE MIJ_TYPE_DEALLOC
+   END INTERFACE DEALLOC
+   INTERFACE SYNC_DEVICE_RDWR
+      MODULE PROCEDURE MIJ_TYPE_SYNC_DEVICE_RDWR
+   END INTERFACE SYNC_DEVICE_RDWR
+   INTERFACE SYNC_DEVICE_RDONLY
+      MODULE PROCEDURE MIJ_TYPE_SYNC_DEVICE_RDONLY
+   END INTERFACE SYNC_DEVICE_RDONLY
+   INTERFACE SYNC_HOST_RDWR
+      MODULE PROCEDURE MIJ_TYPE_SYNC_HOST_RDWR
+   END INTERFACE SYNC_HOST_RDWR
+   INTERFACE SYNC_HOST_RDONLY
+      MODULE PROCEDURE MIJ_TYPE_SYNC_HOST_RDONLY
+   END INTERFACE SYNC_HOST_RDONLY
+   INTERFACE GET_DEVICE_DATA_RDWR
+      MODULE PROCEDURE MIJ_TYPE_GET_DEVICE_DATA_RDWR
+   END INTERFACE GET_DEVICE_DATA_RDWR
+   INTERFACE GET_DEVICE_DATA_RDONLY
+      MODULE PROCEDURE MIJ_TYPE_GET_DEVICE_DATA_RDONLY
+   END INTERFACE GET_DEVICE_DATA_RDONLY
+   INTERFACE GET_DEVICE_DATA_WRONLY
+      MODULE PROCEDURE MIJ_TYPE_GET_DEVICE_DATA_WRONLY
+   END INTERFACE GET_DEVICE_DATA_WRONLY
+   INTERFACE GET_HOST_DATA_RDWR
+      MODULE PROCEDURE MIJ_TYPE_GET_HOST_DATA_RDWR
+   END INTERFACE GET_HOST_DATA_RDWR
+   INTERFACE GET_HOST_DATA_RDONLY
+      MODULE PROCEDURE MIJ_TYPE_GET_HOST_DATA_RDONLY
+   END INTERFACE GET_HOST_DATA_RDONLY
+   INTERFACE DELETE_DEVICE_DATA
+      MODULE PROCEDURE MIJ_TYPE_DELETE_DEVICE_DATA
+   END INTERFACE DELETE_DEVICE_DATA
+
+   TYPE MIJ_TYPE
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2IM), POINTER :: F_PTR => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: PTR(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2IM), POINTER :: F_PTR => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: PTR(:,:) => NULL()
+#endif
+      LOGICAL :: LALLOC = .FALSE.
+   END TYPE MIJ_TYPE
+
+   PUBLIC :: MIJ_TYPE, ALLOC, DEALLOC
+   PUBLIC :: SYNC_DEVICE_RDWR, SYNC_DEVICE_RDONLY, SYNC_HOST_RDWR, SYNC_HOST_RDONLY, GET_DEVICE_DATA_RDWR, GET_DEVICE_DATA_RDONLY,&
+       & GET_DEVICE_DATA_WRONLY, GET_HOST_DATA_RDWR, GET_HOST_DATA_RDONLY, DELETE_DEVICE_DATA
+
+   CONTAINS
+
+   SUBROUTINE MIJ_TYPE_ALLOC(SELF, UBOUNDS, LBOUNDS)
+      TYPE(MIJ_TYPE) :: SELF
+      INTEGER(KIND=JWIM), INTENT(IN) :: UBOUNDS(2)
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: LBOUNDS(2)
+      INTEGER(KIND=JWIM) :: LLBOUNDS(2)
+
+      LLBOUNDS(:) = 1
+      IF(PRESENT(LBOUNDS)) LLBOUNDS = LBOUNDS
+
+      CALL FIELD_NEW(SELF%F_PTR, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_PTR%GET_HOST_DATA_RDWR(SELF%PTR)
+      SELF%PTR(:,:) = 0_JWIM
+
+      SELF%LALLOC = .TRUE.
+#ifdef OMPGPU
+      !$omp target enter data map(to:SELF)
+#else
+      !$acc enter data copyin(SELF)
+#endif
+
+   END SUBROUTINE MIJ_TYPE_ALLOC
+
+   SUBROUTINE MIJ_TYPE_DEALLOC(SELF)
+      TYPE(MIJ_TYPE) :: SELF
+
+      NULLIFY(SELF%PTR)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%PTR)
+#else
+      !$acc exit data detach(SELF%PTR)
+#endif
+      CALL FIELD_DELETE(SELF%F_PTR)
+      NULLIFY(SELF%F_PTR)
+
+      SELF%LALLOC = .FALSE.
+#ifdef OMPGPU
+      !$omp target exit data map(delete:SELF)
+#else
+      !$acc exit data delete(SELF)
+#endif
+
+   END SUBROUTINE MIJ_TYPE_DEALLOC
+
+   SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_RDWR(SELF, PTR)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%GET_DEVICE_DATA_RDWR(SELF%PTR)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%PTR)
+#else
+             !$acc enter data attach(SELF%PTR)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%GET_DEVICE_DATA_RDWR(SELF%PTR)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%PTR)
+#else
+         !$acc enter data attach(SELF%PTR)
+#endif
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_RDWR
+
+   SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_WRONLY(SELF, PTR)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%GET_DEVICE_DATA_WRONLY(SELF%PTR)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%PTR)
+#else
+             !$acc enter data attach(SELF%PTR)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%GET_DEVICE_DATA_WRONLY(SELF%PTR)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%PTR)
+#else
+         !$acc enter data attach(SELF%PTR)
+#endif
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_WRONLY
+
+   SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_RDONLY(SELF, PTR)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%GET_DEVICE_DATA_RDONLY(SELF%PTR)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%PTR)
+#else
+             !$acc enter data attach(SELF%PTR)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%GET_DEVICE_DATA_RDONLY(SELF%PTR)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%PTR)
+#else
+         !$acc enter data attach(SELF%PTR)
+#endif
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_GET_DEVICE_DATA_RDONLY
+
+   SUBROUTINE MIJ_TYPE_SYNC_DEVICE_RDWR(SELF, PTR, QUEUE)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_SYNC_DEVICE_RDWR
+
+   SUBROUTINE MIJ_TYPE_SYNC_DEVICE_RDONLY(SELF, PTR, QUEUE)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_SYNC_DEVICE_RDONLY
+
+   SUBROUTINE MIJ_TYPE_GET_HOST_DATA_RDONLY(SELF, PTR)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%PTR)
+#else
+             !$acc exit data detach(SELF%PTR)
+#endif
+             CALL SELF%F_PTR%GET_HOST_DATA_RDONLY(SELF%PTR)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%PTR)
+#else
+         !$acc exit data detach(SELF%PTR)
+#endif
+         CALL SELF%F_PTR%GET_HOST_DATA_RDONLY(SELF%PTR)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_GET_HOST_DATA_RDONLY
+
+   SUBROUTINE MIJ_TYPE_GET_HOST_DATA_RDWR(SELF, PTR)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%PTR)
+#else
+             !$acc exit data detach(SELF%PTR)
+#endif
+             CALL SELF%F_PTR%GET_HOST_DATA_RDWR(SELF%PTR)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%PTR)
+#else
+         !$acc exit data detach(SELF%PTR)
+#endif
+         CALL SELF%F_PTR%GET_HOST_DATA_RDWR(SELF%PTR)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_GET_HOST_DATA_RDWR
+
+   SUBROUTINE MIJ_TYPE_SYNC_HOST_RDONLY(SELF, PTR, QUEUE)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_SYNC_HOST_RDONLY
+
+   SUBROUTINE MIJ_TYPE_SYNC_HOST_RDWR(SELF, PTR, QUEUE)
+      TYPE(MIJ_TYPE) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: PTR
+      LOGICAL :: L_PTR = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(PTR)) L_PTR = PTR
+
+
+      IF(L_PTR)THEN
+         !... copy only selected members
+         IF(L_PTR)THEN
+             CALL SELF%F_PTR%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_PTR%SYNC_HOST_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE MIJ_TYPE_SYNC_HOST_RDWR
+
+   SUBROUTINE MIJ_TYPE_DELETE_DEVICE_DATA(SELF)
+      TYPE(MIJ_TYPE) :: SELF
+
+      CALL SELF%F_PTR%DELETE_DEVICE_DATA()
+
+   END SUBROUTINE MIJ_TYPE_DELETE_DEVICE_DATA
+
+END MODULE MIJ_TYPE_TYPE_MOD

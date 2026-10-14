@@ -1,0 +1,1963 @@
+MODULE WAVE2OCEAN_TYPE_MOD
+
+   USE PARKIND_WAVE, ONLY : JWRB, JWIM, JWRO
+   USE FIELD_MODULE, ONLY : FIELD_3RB, FIELD_2IM, FIELD_2RB, FIELD_3IM, FIELD_4RB, FIELD_4IM, FIELD_2RD, &
+   &                        FIELD_2RM, FIELD_1IM, FIELD_1RB
+   USE FIELD_FACTORY_MODULE, ONLY : FIELD_NEW, FIELD_DELETE
+   IMPLICIT NONE
+
+   PRIVATE
+
+   INTERFACE ALLOC
+      MODULE PROCEDURE WAVE2OCEAN_ALLOC
+   END INTERFACE ALLOC
+   INTERFACE DEALLOC
+      MODULE PROCEDURE WAVE2OCEAN_DEALLOC
+   END INTERFACE DEALLOC
+   INTERFACE SYNC_DEVICE_RDWR
+      MODULE PROCEDURE WAVE2OCEAN_SYNC_DEVICE_RDWR
+   END INTERFACE SYNC_DEVICE_RDWR
+   INTERFACE SYNC_DEVICE_RDONLY
+      MODULE PROCEDURE WAVE2OCEAN_SYNC_DEVICE_RDONLY
+   END INTERFACE SYNC_DEVICE_RDONLY
+   INTERFACE SYNC_HOST_RDWR
+      MODULE PROCEDURE WAVE2OCEAN_SYNC_HOST_RDWR
+   END INTERFACE SYNC_HOST_RDWR
+   INTERFACE SYNC_HOST_RDONLY
+      MODULE PROCEDURE WAVE2OCEAN_SYNC_HOST_RDONLY
+   END INTERFACE SYNC_HOST_RDONLY
+   INTERFACE GET_DEVICE_DATA_RDWR
+      MODULE PROCEDURE WAVE2OCEAN_GET_DEVICE_DATA_RDWR
+   END INTERFACE GET_DEVICE_DATA_RDWR
+   INTERFACE GET_DEVICE_DATA_RDONLY
+      MODULE PROCEDURE WAVE2OCEAN_GET_DEVICE_DATA_RDONLY
+   END INTERFACE GET_DEVICE_DATA_RDONLY
+   INTERFACE GET_DEVICE_DATA_WRONLY
+      MODULE PROCEDURE WAVE2OCEAN_GET_DEVICE_DATA_WRONLY
+   END INTERFACE GET_DEVICE_DATA_WRONLY
+   INTERFACE GET_HOST_DATA_RDWR
+      MODULE PROCEDURE WAVE2OCEAN_GET_HOST_DATA_RDWR
+   END INTERFACE GET_HOST_DATA_RDWR
+   INTERFACE GET_HOST_DATA_RDONLY
+      MODULE PROCEDURE WAVE2OCEAN_GET_HOST_DATA_RDONLY
+   END INTERFACE GET_HOST_DATA_RDONLY
+   INTERFACE DELETE_DEVICE_DATA
+      MODULE PROCEDURE WAVE2OCEAN_DELETE_DEVICE_DATA
+   END INTERFACE DELETE_DEVICE_DATA
+
+   TYPE WAVE2OCEAN
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NSWH => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NSWH(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NSWH => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NSWH(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NMWP => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NMWP(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NMWP => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NMWP(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NPHIEPS => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NPHIEPS(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NPHIEPS => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NPHIEPS(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOPHIF => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOPHIF(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOPHIF => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOPHIF(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NTAUOC => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NTAUOC(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NTAUOC => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NTAUOC(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOTAUX => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUX(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOTAUX => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUX(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOTAUY => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUY(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOTAUY => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUY(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOUSTOKES => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOUSTOKES(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOUSTOKES => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOUSTOKES(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOVSTOKES => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOVSTOKES(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOVSTOKES => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOVSTOKES(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOSTRN => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOSTRN(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOSTRN => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOSTRN(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOWSWAVE => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOWSWAVE(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOWSWAVE => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOWSWAVE(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOTAUICX => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUICX(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOTAUICX => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUICX(:,:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RD), POINTER :: F_NEMOTAUICY => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUICY(:,:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_2RM), POINTER :: F_NEMOTAUICY => NULL()
+      REAL(KIND=JWRO), POINTER, CONTIGUOUS :: NEMOTAUICY(:,:) => NULL()
+#endif
+      LOGICAL :: LALLOC = .FALSE.
+   END TYPE WAVE2OCEAN
+
+   PUBLIC :: WAVE2OCEAN, ALLOC, DEALLOC
+   PUBLIC :: SYNC_DEVICE_RDWR, SYNC_DEVICE_RDONLY, SYNC_HOST_RDWR, SYNC_HOST_RDONLY, GET_DEVICE_DATA_RDWR, GET_DEVICE_DATA_RDONLY,&
+       & GET_DEVICE_DATA_WRONLY, GET_HOST_DATA_RDWR, GET_HOST_DATA_RDONLY, DELETE_DEVICE_DATA
+
+   CONTAINS
+
+   SUBROUTINE WAVE2OCEAN_ALLOC(SELF, UBOUNDS, LBOUNDS)
+      TYPE(WAVE2OCEAN) :: SELF
+      INTEGER(KIND=JWIM), INTENT(IN) :: UBOUNDS(2)
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: LBOUNDS(2)
+      INTEGER(KIND=JWIM) :: LLBOUNDS(2)
+
+      LLBOUNDS(:) = 1
+      IF(PRESENT(LBOUNDS)) LLBOUNDS = LBOUNDS
+
+      CALL FIELD_NEW(SELF%F_NSWH, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NSWH%GET_HOST_DATA_RDWR(SELF%NSWH)
+      SELF%NSWH(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NMWP, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NMWP%GET_HOST_DATA_RDWR(SELF%NMWP)
+      SELF%NMWP(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NPHIEPS, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NPHIEPS%GET_HOST_DATA_RDWR(SELF%NPHIEPS)
+      SELF%NPHIEPS(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOPHIF, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOPHIF%GET_HOST_DATA_RDWR(SELF%NEMOPHIF)
+      SELF%NEMOPHIF(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NTAUOC, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NTAUOC%GET_HOST_DATA_RDWR(SELF%NTAUOC)
+      SELF%NTAUOC(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOTAUX, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOTAUX%GET_HOST_DATA_RDWR(SELF%NEMOTAUX)
+      SELF%NEMOTAUX(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOTAUY, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOTAUY%GET_HOST_DATA_RDWR(SELF%NEMOTAUY)
+      SELF%NEMOTAUY(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOUSTOKES, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOUSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOUSTOKES)
+      SELF%NEMOUSTOKES(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOVSTOKES, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOVSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOVSTOKES)
+      SELF%NEMOVSTOKES(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOSTRN, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOSTRN%GET_HOST_DATA_RDWR(SELF%NEMOSTRN)
+      SELF%NEMOSTRN(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOWSWAVE, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOWSWAVE%GET_HOST_DATA_RDWR(SELF%NEMOWSWAVE)
+      SELF%NEMOWSWAVE(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOTAUICX, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOTAUICX%GET_HOST_DATA_RDWR(SELF%NEMOTAUICX)
+      SELF%NEMOTAUICX(:,:) = 0_JWRO
+      CALL FIELD_NEW(SELF%F_NEMOTAUICY, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_NEMOTAUICY%GET_HOST_DATA_RDWR(SELF%NEMOTAUICY)
+      SELF%NEMOTAUICY(:,:) = 0_JWRO
+
+      SELF%LALLOC = .TRUE.
+#ifdef OMPGPU
+      !$omp target enter data map(to:SELF)
+#else
+      !$acc enter data copyin(SELF)
+#endif
+
+   END SUBROUTINE WAVE2OCEAN_ALLOC
+
+   SUBROUTINE WAVE2OCEAN_DEALLOC(SELF)
+      TYPE(WAVE2OCEAN) :: SELF
+
+      NULLIFY(SELF%NSWH)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NSWH)
+#else
+      !$acc exit data detach(SELF%NSWH)
+#endif
+      CALL FIELD_DELETE(SELF%F_NSWH)
+      NULLIFY(SELF%F_NSWH)
+      NULLIFY(SELF%NMWP)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NMWP)
+#else
+      !$acc exit data detach(SELF%NMWP)
+#endif
+      CALL FIELD_DELETE(SELF%F_NMWP)
+      NULLIFY(SELF%F_NMWP)
+      NULLIFY(SELF%NPHIEPS)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NPHIEPS)
+#else
+      !$acc exit data detach(SELF%NPHIEPS)
+#endif
+      CALL FIELD_DELETE(SELF%F_NPHIEPS)
+      NULLIFY(SELF%F_NPHIEPS)
+      NULLIFY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOPHIF)
+#else
+      !$acc exit data detach(SELF%NEMOPHIF)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOPHIF)
+      NULLIFY(SELF%F_NEMOPHIF)
+      NULLIFY(SELF%NTAUOC)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NTAUOC)
+#else
+      !$acc exit data detach(SELF%NTAUOC)
+#endif
+      CALL FIELD_DELETE(SELF%F_NTAUOC)
+      NULLIFY(SELF%F_NTAUOC)
+      NULLIFY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOTAUX)
+#else
+      !$acc exit data detach(SELF%NEMOTAUX)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOTAUX)
+      NULLIFY(SELF%F_NEMOTAUX)
+      NULLIFY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOTAUY)
+#else
+      !$acc exit data detach(SELF%NEMOTAUY)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOTAUY)
+      NULLIFY(SELF%F_NEMOTAUY)
+      NULLIFY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOUSTOKES)
+#else
+      !$acc exit data detach(SELF%NEMOUSTOKES)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOUSTOKES)
+      NULLIFY(SELF%F_NEMOUSTOKES)
+      NULLIFY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOVSTOKES)
+#else
+      !$acc exit data detach(SELF%NEMOVSTOKES)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOVSTOKES)
+      NULLIFY(SELF%F_NEMOVSTOKES)
+      NULLIFY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOSTRN)
+#else
+      !$acc exit data detach(SELF%NEMOSTRN)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOSTRN)
+      NULLIFY(SELF%F_NEMOSTRN)
+      NULLIFY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOWSWAVE)
+#else
+      !$acc exit data detach(SELF%NEMOWSWAVE)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOWSWAVE)
+      NULLIFY(SELF%F_NEMOWSWAVE)
+      NULLIFY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOTAUICX)
+#else
+      !$acc exit data detach(SELF%NEMOTAUICX)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOTAUICX)
+      NULLIFY(SELF%F_NEMOTAUICX)
+      NULLIFY(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%NEMOTAUICY)
+#else
+      !$acc exit data detach(SELF%NEMOTAUICY)
+#endif
+      CALL FIELD_DELETE(SELF%F_NEMOTAUICY)
+      NULLIFY(SELF%F_NEMOTAUICY)
+
+      SELF%LALLOC = .FALSE.
+#ifdef OMPGPU
+      !$omp target exit data map(delete:SELF)
+#else
+      !$acc exit data delete(SELF)
+#endif
+
+   END SUBROUTINE WAVE2OCEAN_DEALLOC
+
+   SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_RDWR(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%GET_DEVICE_DATA_RDWR(SELF%NSWH)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NSWH)
+#else
+             !$acc enter data attach(SELF%NSWH)
+#endif
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%GET_DEVICE_DATA_RDWR(SELF%NMWP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NMWP)
+#else
+             !$acc enter data attach(SELF%NMWP)
+#endif
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_RDWR(SELF%NPHIEPS)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+             !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_RDWR(SELF%NEMOPHIF)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+             !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%GET_DEVICE_DATA_RDWR(SELF%NTAUOC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NTAUOC)
+#else
+             !$acc enter data attach(SELF%NTAUOC)
+#endif
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_RDWR(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_RDWR(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_RDWR(SELF%NEMOSTRN)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+             !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_RDWR(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+             !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%GET_DEVICE_DATA_RDWR(SELF%NSWH)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NSWH)
+#else
+         !$acc enter data attach(SELF%NSWH)
+#endif
+         CALL SELF%F_NMWP%GET_DEVICE_DATA_RDWR(SELF%NMWP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NMWP)
+#else
+         !$acc enter data attach(SELF%NMWP)
+#endif
+         CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_RDWR(SELF%NPHIEPS)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+         !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_RDWR(SELF%NEMOPHIF)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+         !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         CALL SELF%F_NTAUOC%GET_DEVICE_DATA_RDWR(SELF%NTAUOC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NTAUOC)
+#else
+         !$acc enter data attach(SELF%NTAUOC)
+#endif
+         CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_RDWR(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_RDWR(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_RDWR(SELF%NEMOSTRN)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+         !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_RDWR(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+         !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_RDWR(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_RDWR
+
+   SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_WRONLY(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%GET_DEVICE_DATA_WRONLY(SELF%NSWH)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NSWH)
+#else
+             !$acc enter data attach(SELF%NSWH)
+#endif
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%GET_DEVICE_DATA_WRONLY(SELF%NMWP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NMWP)
+#else
+             !$acc enter data attach(SELF%NMWP)
+#endif
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_WRONLY(SELF%NPHIEPS)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+             !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_WRONLY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+             !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%GET_DEVICE_DATA_WRONLY(SELF%NTAUOC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NTAUOC)
+#else
+             !$acc enter data attach(SELF%NTAUOC)
+#endif
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_WRONLY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_WRONLY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_WRONLY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+             !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_WRONLY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+             !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%GET_DEVICE_DATA_WRONLY(SELF%NSWH)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NSWH)
+#else
+         !$acc enter data attach(SELF%NSWH)
+#endif
+         CALL SELF%F_NMWP%GET_DEVICE_DATA_WRONLY(SELF%NMWP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NMWP)
+#else
+         !$acc enter data attach(SELF%NMWP)
+#endif
+         CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_WRONLY(SELF%NPHIEPS)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+         !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_WRONLY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+         !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         CALL SELF%F_NTAUOC%GET_DEVICE_DATA_WRONLY(SELF%NTAUOC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NTAUOC)
+#else
+         !$acc enter data attach(SELF%NTAUOC)
+#endif
+         CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_WRONLY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_WRONLY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_WRONLY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+         !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_WRONLY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+         !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_WRONLY(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_WRONLY
+
+   SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_RDONLY(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%GET_DEVICE_DATA_RDONLY(SELF%NSWH)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NSWH)
+#else
+             !$acc enter data attach(SELF%NSWH)
+#endif
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%GET_DEVICE_DATA_RDONLY(SELF%NMWP)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NMWP)
+#else
+             !$acc enter data attach(SELF%NMWP)
+#endif
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_RDONLY(SELF%NPHIEPS)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+             !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_RDONLY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+             !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%GET_DEVICE_DATA_RDONLY(SELF%NTAUOC)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NTAUOC)
+#else
+             !$acc enter data attach(SELF%NTAUOC)
+#endif
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_RDONLY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_RDONLY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+             !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_RDONLY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+             !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_RDONLY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+             !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+             !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%GET_DEVICE_DATA_RDONLY(SELF%NSWH)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NSWH)
+#else
+         !$acc enter data attach(SELF%NSWH)
+#endif
+         CALL SELF%F_NMWP%GET_DEVICE_DATA_RDONLY(SELF%NMWP)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NMWP)
+#else
+         !$acc enter data attach(SELF%NMWP)
+#endif
+         CALL SELF%F_NPHIEPS%GET_DEVICE_DATA_RDONLY(SELF%NPHIEPS)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NPHIEPS)
+#else
+         !$acc enter data attach(SELF%NPHIEPS)
+#endif
+         CALL SELF%F_NEMOPHIF%GET_DEVICE_DATA_RDONLY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOPHIF)
+#else
+         !$acc enter data attach(SELF%NEMOPHIF)
+#endif
+         CALL SELF%F_NTAUOC%GET_DEVICE_DATA_RDONLY(SELF%NTAUOC)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NTAUOC)
+#else
+         !$acc enter data attach(SELF%NTAUOC)
+#endif
+         CALL SELF%F_NEMOTAUX%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUX)
+#endif
+         CALL SELF%F_NEMOTAUY%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUY)
+#endif
+         CALL SELF%F_NEMOUSTOKES%GET_DEVICE_DATA_RDONLY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOUSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOUSTOKES)
+#endif
+         CALL SELF%F_NEMOVSTOKES%GET_DEVICE_DATA_RDONLY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOVSTOKES)
+#else
+         !$acc enter data attach(SELF%NEMOVSTOKES)
+#endif
+         CALL SELF%F_NEMOSTRN%GET_DEVICE_DATA_RDONLY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOSTRN)
+#else
+         !$acc enter data attach(SELF%NEMOSTRN)
+#endif
+         CALL SELF%F_NEMOWSWAVE%GET_DEVICE_DATA_RDONLY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOWSWAVE)
+#else
+         !$acc enter data attach(SELF%NEMOWSWAVE)
+#endif
+         CALL SELF%F_NEMOTAUICX%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICX)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICX)
+#endif
+         CALL SELF%F_NEMOTAUICY%GET_DEVICE_DATA_RDONLY(SELF%NEMOTAUICY)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%NEMOTAUICY)
+#else
+         !$acc enter data attach(SELF%NEMOTAUICY)
+#endif
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_GET_DEVICE_DATA_RDONLY
+
+   SUBROUTINE WAVE2OCEAN_SYNC_DEVICE_RDWR(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY, QUEUE)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NMWP%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NPHIEPS%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOPHIF%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NTAUOC%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUX%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUY%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOUSTOKES%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOVSTOKES%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOSTRN%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOWSWAVE%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICX%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICY%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_SYNC_DEVICE_RDWR
+
+   SUBROUTINE WAVE2OCEAN_SYNC_DEVICE_RDONLY(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY, QUEUE)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NMWP%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NPHIEPS%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOPHIF%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NTAUOC%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUX%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUY%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOUSTOKES%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOVSTOKES%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOSTRN%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOWSWAVE%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICX%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICY%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_SYNC_DEVICE_RDONLY
+
+   SUBROUTINE WAVE2OCEAN_GET_HOST_DATA_RDONLY(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NSWH)
+#else
+             !$acc exit data detach(SELF%NSWH)
+#endif
+             CALL SELF%F_NSWH%GET_HOST_DATA_RDONLY(SELF%NSWH)
+         ENDIF
+         IF(L_NMWP)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NMWP)
+#else
+             !$acc exit data detach(SELF%NMWP)
+#endif
+             CALL SELF%F_NMWP%GET_HOST_DATA_RDONLY(SELF%NMWP)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NPHIEPS)
+#else
+             !$acc exit data detach(SELF%NPHIEPS)
+#endif
+             CALL SELF%F_NPHIEPS%GET_HOST_DATA_RDONLY(SELF%NPHIEPS)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOPHIF)
+#else
+             !$acc exit data detach(SELF%NEMOPHIF)
+#endif
+             CALL SELF%F_NEMOPHIF%GET_HOST_DATA_RDONLY(SELF%NEMOPHIF)
+         ENDIF
+         IF(L_NTAUOC)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NTAUOC)
+#else
+             !$acc exit data detach(SELF%NTAUOC)
+#endif
+             CALL SELF%F_NTAUOC%GET_HOST_DATA_RDONLY(SELF%NTAUOC)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUX)
+#else
+             !$acc exit data detach(SELF%NEMOTAUX)
+#endif
+             CALL SELF%F_NEMOTAUX%GET_HOST_DATA_RDONLY(SELF%NEMOTAUX)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUY)
+#else
+             !$acc exit data detach(SELF%NEMOTAUY)
+#endif
+             CALL SELF%F_NEMOTAUY%GET_HOST_DATA_RDONLY(SELF%NEMOTAUY)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOUSTOKES)
+#else
+             !$acc exit data detach(SELF%NEMOUSTOKES)
+#endif
+             CALL SELF%F_NEMOUSTOKES%GET_HOST_DATA_RDONLY(SELF%NEMOUSTOKES)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOVSTOKES)
+#else
+             !$acc exit data detach(SELF%NEMOVSTOKES)
+#endif
+             CALL SELF%F_NEMOVSTOKES%GET_HOST_DATA_RDONLY(SELF%NEMOVSTOKES)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOSTRN)
+#else
+             !$acc exit data detach(SELF%NEMOSTRN)
+#endif
+             CALL SELF%F_NEMOSTRN%GET_HOST_DATA_RDONLY(SELF%NEMOSTRN)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOWSWAVE)
+#else
+             !$acc exit data detach(SELF%NEMOWSWAVE)
+#endif
+             CALL SELF%F_NEMOWSWAVE%GET_HOST_DATA_RDONLY(SELF%NEMOWSWAVE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUICX)
+#else
+             !$acc exit data detach(SELF%NEMOTAUICX)
+#endif
+             CALL SELF%F_NEMOTAUICX%GET_HOST_DATA_RDONLY(SELF%NEMOTAUICX)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUICY)
+#else
+             !$acc exit data detach(SELF%NEMOTAUICY)
+#endif
+             CALL SELF%F_NEMOTAUICY%GET_HOST_DATA_RDONLY(SELF%NEMOTAUICY)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NSWH)
+#else
+         !$acc exit data detach(SELF%NSWH)
+#endif
+         CALL SELF%F_NSWH%GET_HOST_DATA_RDONLY(SELF%NSWH)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NMWP)
+#else
+         !$acc exit data detach(SELF%NMWP)
+#endif
+         CALL SELF%F_NMWP%GET_HOST_DATA_RDONLY(SELF%NMWP)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NPHIEPS)
+#else
+         !$acc exit data detach(SELF%NPHIEPS)
+#endif
+         CALL SELF%F_NPHIEPS%GET_HOST_DATA_RDONLY(SELF%NPHIEPS)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOPHIF)
+#else
+         !$acc exit data detach(SELF%NEMOPHIF)
+#endif
+         CALL SELF%F_NEMOPHIF%GET_HOST_DATA_RDONLY(SELF%NEMOPHIF)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NTAUOC)
+#else
+         !$acc exit data detach(SELF%NTAUOC)
+#endif
+         CALL SELF%F_NTAUOC%GET_HOST_DATA_RDONLY(SELF%NTAUOC)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUX)
+#else
+         !$acc exit data detach(SELF%NEMOTAUX)
+#endif
+         CALL SELF%F_NEMOTAUX%GET_HOST_DATA_RDONLY(SELF%NEMOTAUX)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUY)
+#else
+         !$acc exit data detach(SELF%NEMOTAUY)
+#endif
+         CALL SELF%F_NEMOTAUY%GET_HOST_DATA_RDONLY(SELF%NEMOTAUY)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOUSTOKES)
+#else
+         !$acc exit data detach(SELF%NEMOUSTOKES)
+#endif
+         CALL SELF%F_NEMOUSTOKES%GET_HOST_DATA_RDONLY(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOVSTOKES)
+#else
+         !$acc exit data detach(SELF%NEMOVSTOKES)
+#endif
+         CALL SELF%F_NEMOVSTOKES%GET_HOST_DATA_RDONLY(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOSTRN)
+#else
+         !$acc exit data detach(SELF%NEMOSTRN)
+#endif
+         CALL SELF%F_NEMOSTRN%GET_HOST_DATA_RDONLY(SELF%NEMOSTRN)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOWSWAVE)
+#else
+         !$acc exit data detach(SELF%NEMOWSWAVE)
+#endif
+         CALL SELF%F_NEMOWSWAVE%GET_HOST_DATA_RDONLY(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUICX)
+#else
+         !$acc exit data detach(SELF%NEMOTAUICX)
+#endif
+         CALL SELF%F_NEMOTAUICX%GET_HOST_DATA_RDONLY(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUICY)
+#else
+         !$acc exit data detach(SELF%NEMOTAUICY)
+#endif
+         CALL SELF%F_NEMOTAUICY%GET_HOST_DATA_RDONLY(SELF%NEMOTAUICY)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_GET_HOST_DATA_RDONLY
+
+   SUBROUTINE WAVE2OCEAN_GET_HOST_DATA_RDWR(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NSWH)
+#else
+             !$acc exit data detach(SELF%NSWH)
+#endif
+             CALL SELF%F_NSWH%GET_HOST_DATA_RDWR(SELF%NSWH)
+         ENDIF
+         IF(L_NMWP)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NMWP)
+#else
+             !$acc exit data detach(SELF%NMWP)
+#endif
+             CALL SELF%F_NMWP%GET_HOST_DATA_RDWR(SELF%NMWP)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NPHIEPS)
+#else
+             !$acc exit data detach(SELF%NPHIEPS)
+#endif
+             CALL SELF%F_NPHIEPS%GET_HOST_DATA_RDWR(SELF%NPHIEPS)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOPHIF)
+#else
+             !$acc exit data detach(SELF%NEMOPHIF)
+#endif
+             CALL SELF%F_NEMOPHIF%GET_HOST_DATA_RDWR(SELF%NEMOPHIF)
+         ENDIF
+         IF(L_NTAUOC)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NTAUOC)
+#else
+             !$acc exit data detach(SELF%NTAUOC)
+#endif
+             CALL SELF%F_NTAUOC%GET_HOST_DATA_RDWR(SELF%NTAUOC)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUX)
+#else
+             !$acc exit data detach(SELF%NEMOTAUX)
+#endif
+             CALL SELF%F_NEMOTAUX%GET_HOST_DATA_RDWR(SELF%NEMOTAUX)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUY)
+#else
+             !$acc exit data detach(SELF%NEMOTAUY)
+#endif
+             CALL SELF%F_NEMOTAUY%GET_HOST_DATA_RDWR(SELF%NEMOTAUY)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOUSTOKES)
+#else
+             !$acc exit data detach(SELF%NEMOUSTOKES)
+#endif
+             CALL SELF%F_NEMOUSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOUSTOKES)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOVSTOKES)
+#else
+             !$acc exit data detach(SELF%NEMOVSTOKES)
+#endif
+             CALL SELF%F_NEMOVSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOVSTOKES)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOSTRN)
+#else
+             !$acc exit data detach(SELF%NEMOSTRN)
+#endif
+             CALL SELF%F_NEMOSTRN%GET_HOST_DATA_RDWR(SELF%NEMOSTRN)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOWSWAVE)
+#else
+             !$acc exit data detach(SELF%NEMOWSWAVE)
+#endif
+             CALL SELF%F_NEMOWSWAVE%GET_HOST_DATA_RDWR(SELF%NEMOWSWAVE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUICX)
+#else
+             !$acc exit data detach(SELF%NEMOTAUICX)
+#endif
+             CALL SELF%F_NEMOTAUICX%GET_HOST_DATA_RDWR(SELF%NEMOTAUICX)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%NEMOTAUICY)
+#else
+             !$acc exit data detach(SELF%NEMOTAUICY)
+#endif
+             CALL SELF%F_NEMOTAUICY%GET_HOST_DATA_RDWR(SELF%NEMOTAUICY)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NSWH)
+#else
+         !$acc exit data detach(SELF%NSWH)
+#endif
+         CALL SELF%F_NSWH%GET_HOST_DATA_RDWR(SELF%NSWH)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NMWP)
+#else
+         !$acc exit data detach(SELF%NMWP)
+#endif
+         CALL SELF%F_NMWP%GET_HOST_DATA_RDWR(SELF%NMWP)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NPHIEPS)
+#else
+         !$acc exit data detach(SELF%NPHIEPS)
+#endif
+         CALL SELF%F_NPHIEPS%GET_HOST_DATA_RDWR(SELF%NPHIEPS)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOPHIF)
+#else
+         !$acc exit data detach(SELF%NEMOPHIF)
+#endif
+         CALL SELF%F_NEMOPHIF%GET_HOST_DATA_RDWR(SELF%NEMOPHIF)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NTAUOC)
+#else
+         !$acc exit data detach(SELF%NTAUOC)
+#endif
+         CALL SELF%F_NTAUOC%GET_HOST_DATA_RDWR(SELF%NTAUOC)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUX)
+#else
+         !$acc exit data detach(SELF%NEMOTAUX)
+#endif
+         CALL SELF%F_NEMOTAUX%GET_HOST_DATA_RDWR(SELF%NEMOTAUX)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUY)
+#else
+         !$acc exit data detach(SELF%NEMOTAUY)
+#endif
+         CALL SELF%F_NEMOTAUY%GET_HOST_DATA_RDWR(SELF%NEMOTAUY)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOUSTOKES)
+#else
+         !$acc exit data detach(SELF%NEMOUSTOKES)
+#endif
+         CALL SELF%F_NEMOUSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOUSTOKES)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOVSTOKES)
+#else
+         !$acc exit data detach(SELF%NEMOVSTOKES)
+#endif
+         CALL SELF%F_NEMOVSTOKES%GET_HOST_DATA_RDWR(SELF%NEMOVSTOKES)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOSTRN)
+#else
+         !$acc exit data detach(SELF%NEMOSTRN)
+#endif
+         CALL SELF%F_NEMOSTRN%GET_HOST_DATA_RDWR(SELF%NEMOSTRN)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOWSWAVE)
+#else
+         !$acc exit data detach(SELF%NEMOWSWAVE)
+#endif
+         CALL SELF%F_NEMOWSWAVE%GET_HOST_DATA_RDWR(SELF%NEMOWSWAVE)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUICX)
+#else
+         !$acc exit data detach(SELF%NEMOTAUICX)
+#endif
+         CALL SELF%F_NEMOTAUICX%GET_HOST_DATA_RDWR(SELF%NEMOTAUICX)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%NEMOTAUICY)
+#else
+         !$acc exit data detach(SELF%NEMOTAUICY)
+#endif
+         CALL SELF%F_NEMOTAUICY%GET_HOST_DATA_RDWR(SELF%NEMOTAUICY)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_GET_HOST_DATA_RDWR
+
+   SUBROUTINE WAVE2OCEAN_SYNC_HOST_RDONLY(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES,&
+       & NEMOVSTOKES, NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY, QUEUE)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NMWP%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NPHIEPS%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOPHIF%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NTAUOC%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUX%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUY%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOUSTOKES%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOVSTOKES%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOSTRN%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOWSWAVE%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICX%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICY%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_SYNC_HOST_RDONLY
+
+   SUBROUTINE WAVE2OCEAN_SYNC_HOST_RDWR(SELF, NSWH, NMWP, NPHIEPS, NEMOPHIF, NTAUOC, NEMOTAUX, NEMOTAUY, NEMOUSTOKES, NEMOVSTOKES,&
+       & NEMOSTRN, NEMOWSWAVE, NEMOTAUICX, NEMOTAUICY, QUEUE)
+      TYPE(WAVE2OCEAN) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: NSWH
+      LOGICAL :: L_NSWH = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NMWP
+      LOGICAL :: L_NMWP = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NPHIEPS
+      LOGICAL :: L_NPHIEPS = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOPHIF
+      LOGICAL :: L_NEMOPHIF = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NTAUOC
+      LOGICAL :: L_NTAUOC = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUX
+      LOGICAL :: L_NEMOTAUX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUY
+      LOGICAL :: L_NEMOTAUY = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOUSTOKES
+      LOGICAL :: L_NEMOUSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOVSTOKES
+      LOGICAL :: L_NEMOVSTOKES = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOSTRN
+      LOGICAL :: L_NEMOSTRN = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOWSWAVE
+      LOGICAL :: L_NEMOWSWAVE = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICX
+      LOGICAL :: L_NEMOTAUICX = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: NEMOTAUICY
+      LOGICAL :: L_NEMOTAUICY = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(NSWH)) L_NSWH = NSWH
+     IF(PRESENT(NMWP)) L_NMWP = NMWP
+     IF(PRESENT(NPHIEPS)) L_NPHIEPS = NPHIEPS
+     IF(PRESENT(NEMOPHIF)) L_NEMOPHIF = NEMOPHIF
+     IF(PRESENT(NTAUOC)) L_NTAUOC = NTAUOC
+     IF(PRESENT(NEMOTAUX)) L_NEMOTAUX = NEMOTAUX
+     IF(PRESENT(NEMOTAUY)) L_NEMOTAUY = NEMOTAUY
+     IF(PRESENT(NEMOUSTOKES)) L_NEMOUSTOKES = NEMOUSTOKES
+     IF(PRESENT(NEMOVSTOKES)) L_NEMOVSTOKES = NEMOVSTOKES
+     IF(PRESENT(NEMOSTRN)) L_NEMOSTRN = NEMOSTRN
+     IF(PRESENT(NEMOWSWAVE)) L_NEMOWSWAVE = NEMOWSWAVE
+     IF(PRESENT(NEMOTAUICX)) L_NEMOTAUICX = NEMOTAUICX
+     IF(PRESENT(NEMOTAUICY)) L_NEMOTAUICY = NEMOTAUICY
+
+
+      IF(L_NSWH.OR.L_NMWP.OR.L_NPHIEPS.OR.L_NEMOPHIF.OR.L_NTAUOC.OR.L_NEMOTAUX.OR.L_NEMOTAUY.OR.L_NEMOUSTOKES.OR.L_NEMOVSTOKES.OR.L&
+          &_NEMOSTRN.OR.L_NEMOWSWAVE.OR.L_NEMOTAUICX.OR.L_NEMOTAUICY)THEN
+         !... copy only selected members
+         IF(L_NSWH)THEN
+             CALL SELF%F_NSWH%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NMWP)THEN
+             CALL SELF%F_NMWP%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NPHIEPS)THEN
+             CALL SELF%F_NPHIEPS%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOPHIF)THEN
+             CALL SELF%F_NEMOPHIF%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NTAUOC)THEN
+             CALL SELF%F_NTAUOC%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUX)THEN
+             CALL SELF%F_NEMOTAUX%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUY)THEN
+             CALL SELF%F_NEMOTAUY%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOUSTOKES)THEN
+             CALL SELF%F_NEMOUSTOKES%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOVSTOKES)THEN
+             CALL SELF%F_NEMOVSTOKES%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOSTRN)THEN
+             CALL SELF%F_NEMOSTRN%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOWSWAVE)THEN
+             CALL SELF%F_NEMOWSWAVE%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICX)THEN
+             CALL SELF%F_NEMOTAUICX%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_NEMOTAUICY)THEN
+             CALL SELF%F_NEMOTAUICY%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_NSWH%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NMWP%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NPHIEPS%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOPHIF%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NTAUOC%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUX%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUY%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOUSTOKES%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOVSTOKES%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOSTRN%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOWSWAVE%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICX%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_NEMOTAUICY%SYNC_HOST_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WAVE2OCEAN_SYNC_HOST_RDWR
+
+   SUBROUTINE WAVE2OCEAN_DELETE_DEVICE_DATA(SELF)
+      TYPE(WAVE2OCEAN) :: SELF
+
+      CALL SELF%F_NSWH%DELETE_DEVICE_DATA()
+      CALL SELF%F_NMWP%DELETE_DEVICE_DATA()
+      CALL SELF%F_NPHIEPS%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOPHIF%DELETE_DEVICE_DATA()
+      CALL SELF%F_NTAUOC%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOTAUX%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOTAUY%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOUSTOKES%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOVSTOKES%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOSTRN%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOWSWAVE%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOTAUICX%DELETE_DEVICE_DATA()
+      CALL SELF%F_NEMOTAUICY%DELETE_DEVICE_DATA()
+
+   END SUBROUTINE WAVE2OCEAN_DELETE_DEVICE_DATA
+
+END MODULE WAVE2OCEAN_TYPE_MOD

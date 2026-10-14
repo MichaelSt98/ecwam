@@ -32,10 +32,17 @@ list( APPEND unwam_srcs
 )
 
 if( NOT TARGET ecwam_intfb )
+   if( ECWAM_HANDTUNED_SP )
+      set( ecwam_interface_directories handtuned src/ecwam/unwam )
+      set( ecwam_interface_source_dir ${PROJECT_SOURCE_DIR} )
+   else()
+      set( ecwam_interface_directories ecwam )
+      set( ecwam_interface_source_dir ${CMAKE_CURRENT_SOURCE_DIR}/.. )
+   endif()
    ecbuild_generate_fortran_interfaces(
        TARGET ecwam_intfb
-       DIRECTORIES ecwam
-       SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..
+       DIRECTORIES ${ecwam_interface_directories}
+       SOURCE_DIR ${ecwam_interface_source_dir}
        DESTINATION intfb
        INCLUDE_DIRS ecwam_intfb_includes
        PARALLEL ${FCM_PARALLEL}
@@ -380,7 +387,9 @@ if(HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack")
 endif()
 
 # expand derived-types using src/ecwam/yowdrvtype_config.yml
-ecwam_expand_drv_types()
+if( NOT ECWAM_HANDTUNED_SP )
+  ecwam_expand_drv_types()
+endif()
 
 unset( MPI_Fortran_LIBRARIES )
 if( HAVE_GPU_AWARE_MPI )
@@ -435,6 +444,9 @@ endif()
 
 foreach( prec sp dp )
   if( HAVE_${prec} )
+    if( ECWAM_HANDTUNED_SP )
+      include( ${CMAKE_CURRENT_SOURCE_DIR}/handtuned_sources.cmake )
+    endif()
     set( ${PNAME}_OCEANMODEL_LIBRARIES "" )
     if( HAVE_OCEAN_COUPLING )
        set( _OCEAN_PREC "")
@@ -447,8 +459,8 @@ foreach( prec sp dp )
     endif()
 
     ecbuild_add_library(
-        TARGET           ecwam_${prec}
-        SOURCES          ${ecwam_srcs}
+         TARGET           ecwam_${prec}
+         SOURCES          ${ecwam_srcs}
         PUBLIC_LIBS      fiat parkind_${prec} ecwam_intfb
                          ${MPI_Fortran_LIBRARIES}
                          ${${PNAME}_OCEANMODEL_LIBRARIES}
@@ -460,6 +472,7 @@ foreach( prec sp dp )
                          $<${HAVE_ACC}:OpenACC::OpenACC_Fortran>
         PUBLIC_INCLUDES  $<INSTALL_INTERFACE:include>
         PRIVATE_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
+                         $<$<BOOL:${ECWAM_HANDTUNED_SP}>:${PROJECT_SOURCE_DIR}/handtuned>
         PRIVATE_DEFINITIONS
            ${ECWAM_PRIVATE_DEFINITIONS}
            $<${HAVE_CUDA}:WAM_HAVE_CUDA>
@@ -476,7 +489,16 @@ foreach( prec sp dp )
 
     if( HAVE_ACC AND CMAKE_Fortran_COMPILER_ID MATCHES "PGI|NVHPC")
        target_link_options( ecwam_${prec} INTERFACE SHELL:${OpenACC_Fortran_FLAGS} )
-       if( CMAKE_CUDA_ARCHITECTURES MATCHES 80 )
+       if( ECWAM_HANDTUNED_SP )
+         if( NOT CMAKE_CUDA_ARCHITECTURES MATCHES "^[0-9]+$" )
+           message( FATAL_ERROR "ECWAM_HANDTUNED_SP requires a numeric CMAKE_CUDA_ARCHITECTURES" )
+         endif()
+         target_compile_options( ecwam_${prec} PRIVATE
+           "$<$<COMPILE_LANGUAGE:Fortran>:-O3>"
+           "$<$<COMPILE_LANGUAGE:Fortran>:-fast>"
+           "$<$<COMPILE_LANGUAGE:Fortran>:-gpu=cc${CMAKE_CUDA_ARCHITECTURES}>"
+           "$<$<COMPILE_LANGUAGE:Fortran>:-gpu=fastmath>" )
+       elseif( CMAKE_CUDA_ARCHITECTURES MATCHES 80 )
          target_compile_options( ecwam_${prec} PRIVATE "-gpu=maxregcount:168,fastmath" )
        else()
          target_compile_options( ecwam_${prec} PRIVATE "-gpu=fastmath" )
@@ -494,6 +516,13 @@ foreach( prec sp dp )
       else()
         target_link_options( ecwam_${prec} PUBLIC "-cuda;-gpu=mem:separate:pinnedalloc" )
       endif()
+    endif()
+
+    if( ECWAM_HANDTUNED_SP )
+      target_compile_definitions( ecwam_${prec} PRIVATE WAM_GPU WAM_HAVE_HIC )
+      find_library( ECWAM_NVTX_FORTRAN_LIBRARY NAMES nvhpcwrapnvtx nvhpcnvtx
+        HINTS ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES} REQUIRED )
+      target_link_libraries( ecwam_${prec} PRIVATE ${ECWAM_NVTX_FORTRAN_LIBRARY} )
     endif()
 
     ecwam_target_compile_definitions_FILENAME( ecwam_${prec} )

@@ -1,0 +1,482 @@
+MODULE WVGRIDGLO_TYPE_MOD
+
+   USE PARKIND_WAVE, ONLY : JWRB, JWIM, JWRO
+   USE FIELD_MODULE, ONLY : FIELD_3RB, FIELD_2IM, FIELD_2RB, FIELD_3IM, FIELD_4RB, FIELD_4IM, FIELD_2RD, &
+   &                        FIELD_2RM, FIELD_1IM, FIELD_1RB
+   USE FIELD_FACTORY_MODULE, ONLY : FIELD_NEW, FIELD_DELETE
+   IMPLICIT NONE
+
+   PRIVATE
+
+   INTERFACE ALLOC
+      MODULE PROCEDURE WVGRIDGLO_ALLOC
+   END INTERFACE ALLOC
+   INTERFACE DEALLOC
+      MODULE PROCEDURE WVGRIDGLO_DEALLOC
+   END INTERFACE DEALLOC
+   INTERFACE SYNC_DEVICE_RDWR
+      MODULE PROCEDURE WVGRIDGLO_SYNC_DEVICE_RDWR
+   END INTERFACE SYNC_DEVICE_RDWR
+   INTERFACE SYNC_DEVICE_RDONLY
+      MODULE PROCEDURE WVGRIDGLO_SYNC_DEVICE_RDONLY
+   END INTERFACE SYNC_DEVICE_RDONLY
+   INTERFACE SYNC_HOST_RDWR
+      MODULE PROCEDURE WVGRIDGLO_SYNC_HOST_RDWR
+   END INTERFACE SYNC_HOST_RDWR
+   INTERFACE SYNC_HOST_RDONLY
+      MODULE PROCEDURE WVGRIDGLO_SYNC_HOST_RDONLY
+   END INTERFACE SYNC_HOST_RDONLY
+   INTERFACE GET_DEVICE_DATA_RDWR
+      MODULE PROCEDURE WVGRIDGLO_GET_DEVICE_DATA_RDWR
+   END INTERFACE GET_DEVICE_DATA_RDWR
+   INTERFACE GET_DEVICE_DATA_RDONLY
+      MODULE PROCEDURE WVGRIDGLO_GET_DEVICE_DATA_RDONLY
+   END INTERFACE GET_DEVICE_DATA_RDONLY
+   INTERFACE GET_DEVICE_DATA_WRONLY
+      MODULE PROCEDURE WVGRIDGLO_GET_DEVICE_DATA_WRONLY
+   END INTERFACE GET_DEVICE_DATA_WRONLY
+   INTERFACE GET_HOST_DATA_RDWR
+      MODULE PROCEDURE WVGRIDGLO_GET_HOST_DATA_RDWR
+   END INTERFACE GET_HOST_DATA_RDWR
+   INTERFACE GET_HOST_DATA_RDONLY
+      MODULE PROCEDURE WVGRIDGLO_GET_HOST_DATA_RDONLY
+   END INTERFACE GET_HOST_DATA_RDONLY
+   INTERFACE DELETE_DEVICE_DATA
+      MODULE PROCEDURE WVGRIDGLO_DELETE_DEVICE_DATA
+   END INTERFACE DELETE_DEVICE_DATA
+
+   TYPE WVGRIDGLO
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_1IM), POINTER :: F_IXLG => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: IXLG(:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_1IM), POINTER :: F_IXLG => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: IXLG(:) => NULL()
+#endif
+#ifndef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_1IM), POINTER :: F_KXLT => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: KXLT(:) => NULL()
+#endif
+#ifdef PARKIND1_SINGLE_NEMO
+      CLASS(FIELD_1IM), POINTER :: F_KXLT => NULL()
+      INTEGER(KIND=JWIM), POINTER, CONTIGUOUS :: KXLT(:) => NULL()
+#endif
+      LOGICAL :: LALLOC = .FALSE.
+   END TYPE WVGRIDGLO
+
+   PUBLIC :: WVGRIDGLO, ALLOC, DEALLOC
+   PUBLIC :: SYNC_DEVICE_RDWR, SYNC_DEVICE_RDONLY, SYNC_HOST_RDWR, SYNC_HOST_RDONLY, GET_DEVICE_DATA_RDWR, GET_DEVICE_DATA_RDONLY,&
+       & GET_DEVICE_DATA_WRONLY, GET_HOST_DATA_RDWR, GET_HOST_DATA_RDONLY, DELETE_DEVICE_DATA
+
+   CONTAINS
+
+   SUBROUTINE WVGRIDGLO_ALLOC(SELF, UBOUNDS, LBOUNDS)
+      TYPE(WVGRIDGLO) :: SELF
+      INTEGER(KIND=JWIM), INTENT(IN) :: UBOUNDS(1)
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: LBOUNDS(1)
+      INTEGER(KIND=JWIM) :: LLBOUNDS(1)
+
+      LLBOUNDS(:) = 1
+      IF(PRESENT(LBOUNDS)) LLBOUNDS = LBOUNDS
+
+      CALL FIELD_NEW(SELF%F_IXLG, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_IXLG%GET_HOST_DATA_RDWR(SELF%IXLG)
+      SELF%IXLG(:) = 0_JWIM
+      CALL FIELD_NEW(SELF%F_KXLT, LBOUNDS=LLBOUNDS, UBOUNDS=UBOUNDS, PERSISTENT=.TRUE.)
+      CALL SELF%F_KXLT%GET_HOST_DATA_RDWR(SELF%KXLT)
+      SELF%KXLT(:) = 0_JWIM
+
+      SELF%LALLOC = .TRUE.
+#ifdef OMPGPU
+      !$omp target enter data map(to:SELF)
+#else
+      !$acc enter data copyin(SELF)
+#endif
+
+   END SUBROUTINE WVGRIDGLO_ALLOC
+
+   SUBROUTINE WVGRIDGLO_DEALLOC(SELF)
+      TYPE(WVGRIDGLO) :: SELF
+
+      NULLIFY(SELF%IXLG)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%IXLG)
+#else
+      !$acc exit data detach(SELF%IXLG)
+#endif
+      CALL FIELD_DELETE(SELF%F_IXLG)
+      NULLIFY(SELF%F_IXLG)
+      NULLIFY(SELF%KXLT)
+#ifdef OMPGPU
+      !$omp target exit data map(release:SELF%KXLT)
+#else
+      !$acc exit data detach(SELF%KXLT)
+#endif
+      CALL FIELD_DELETE(SELF%F_KXLT)
+      NULLIFY(SELF%F_KXLT)
+
+      SELF%LALLOC = .FALSE.
+#ifdef OMPGPU
+      !$omp target exit data map(delete:SELF)
+#else
+      !$acc exit data delete(SELF)
+#endif
+
+   END SUBROUTINE WVGRIDGLO_DEALLOC
+
+   SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_RDWR(SELF, IXLG, KXLT)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%GET_DEVICE_DATA_RDWR(SELF%IXLG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%IXLG)
+#else
+             !$acc enter data attach(SELF%IXLG)
+#endif
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%GET_DEVICE_DATA_RDWR(SELF%KXLT)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%KXLT)
+#else
+             !$acc enter data attach(SELF%KXLT)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%GET_DEVICE_DATA_RDWR(SELF%IXLG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%IXLG)
+#else
+         !$acc enter data attach(SELF%IXLG)
+#endif
+         CALL SELF%F_KXLT%GET_DEVICE_DATA_RDWR(SELF%KXLT)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%KXLT)
+#else
+         !$acc enter data attach(SELF%KXLT)
+#endif
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_RDWR
+
+   SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_WRONLY(SELF, IXLG, KXLT)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%GET_DEVICE_DATA_WRONLY(SELF%IXLG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%IXLG)
+#else
+             !$acc enter data attach(SELF%IXLG)
+#endif
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%GET_DEVICE_DATA_WRONLY(SELF%KXLT)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%KXLT)
+#else
+             !$acc enter data attach(SELF%KXLT)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%GET_DEVICE_DATA_WRONLY(SELF%IXLG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%IXLG)
+#else
+         !$acc enter data attach(SELF%IXLG)
+#endif
+         CALL SELF%F_KXLT%GET_DEVICE_DATA_WRONLY(SELF%KXLT)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%KXLT)
+#else
+         !$acc enter data attach(SELF%KXLT)
+#endif
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_WRONLY
+
+   SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_RDONLY(SELF, IXLG, KXLT)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%GET_DEVICE_DATA_RDONLY(SELF%IXLG)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%IXLG)
+#else
+             !$acc enter data attach(SELF%IXLG)
+#endif
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%GET_DEVICE_DATA_RDONLY(SELF%KXLT)
+#ifdef OMPGPU
+             !$omp target enter data map(to:SELF%KXLT)
+#else
+             !$acc enter data attach(SELF%KXLT)
+#endif
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%GET_DEVICE_DATA_RDONLY(SELF%IXLG)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%IXLG)
+#else
+         !$acc enter data attach(SELF%IXLG)
+#endif
+         CALL SELF%F_KXLT%GET_DEVICE_DATA_RDONLY(SELF%KXLT)
+#ifdef OMPGPU
+         !$omp target enter data map(to:SELF%KXLT)
+#else
+         !$acc enter data attach(SELF%KXLT)
+#endif
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_GET_DEVICE_DATA_RDONLY
+
+   SUBROUTINE WVGRIDGLO_SYNC_DEVICE_RDWR(SELF, IXLG, KXLT, QUEUE)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_KXLT%SYNC_DEVICE_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_SYNC_DEVICE_RDWR
+
+   SUBROUTINE WVGRIDGLO_SYNC_DEVICE_RDONLY(SELF, IXLG, KXLT, QUEUE)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_KXLT%SYNC_DEVICE_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_SYNC_DEVICE_RDONLY
+
+   SUBROUTINE WVGRIDGLO_GET_HOST_DATA_RDONLY(SELF, IXLG, KXLT)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%IXLG)
+#else
+             !$acc exit data detach(SELF%IXLG)
+#endif
+             CALL SELF%F_IXLG%GET_HOST_DATA_RDONLY(SELF%IXLG)
+         ENDIF
+         IF(L_KXLT)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%KXLT)
+#else
+             !$acc exit data detach(SELF%KXLT)
+#endif
+             CALL SELF%F_KXLT%GET_HOST_DATA_RDONLY(SELF%KXLT)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%IXLG)
+#else
+         !$acc exit data detach(SELF%IXLG)
+#endif
+         CALL SELF%F_IXLG%GET_HOST_DATA_RDONLY(SELF%IXLG)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%KXLT)
+#else
+         !$acc exit data detach(SELF%KXLT)
+#endif
+         CALL SELF%F_KXLT%GET_HOST_DATA_RDONLY(SELF%KXLT)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_GET_HOST_DATA_RDONLY
+
+   SUBROUTINE WVGRIDGLO_GET_HOST_DATA_RDWR(SELF, IXLG, KXLT)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%IXLG)
+#else
+             !$acc exit data detach(SELF%IXLG)
+#endif
+             CALL SELF%F_IXLG%GET_HOST_DATA_RDWR(SELF%IXLG)
+         ENDIF
+         IF(L_KXLT)THEN
+#ifdef OMPGPU
+             !$omp target exit data map(release:SELF%KXLT)
+#else
+             !$acc exit data detach(SELF%KXLT)
+#endif
+             CALL SELF%F_KXLT%GET_HOST_DATA_RDWR(SELF%KXLT)
+         ENDIF
+      ELSE
+         !... copy entire struct
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%IXLG)
+#else
+         !$acc exit data detach(SELF%IXLG)
+#endif
+         CALL SELF%F_IXLG%GET_HOST_DATA_RDWR(SELF%IXLG)
+#ifdef OMPGPU
+         !$omp target exit data map(release:SELF%KXLT)
+#else
+         !$acc exit data detach(SELF%KXLT)
+#endif
+         CALL SELF%F_KXLT%GET_HOST_DATA_RDWR(SELF%KXLT)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_GET_HOST_DATA_RDWR
+
+   SUBROUTINE WVGRIDGLO_SYNC_HOST_RDONLY(SELF, IXLG, KXLT, QUEUE)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+         CALL SELF%F_KXLT%SYNC_HOST_RDONLY(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_SYNC_HOST_RDONLY
+
+   SUBROUTINE WVGRIDGLO_SYNC_HOST_RDWR(SELF, IXLG, KXLT, QUEUE)
+      TYPE(WVGRIDGLO) :: SELF
+      LOGICAL, INTENT(IN), OPTIONAL :: IXLG
+      LOGICAL :: L_IXLG = .FALSE.
+      LOGICAL, INTENT(IN), OPTIONAL :: KXLT
+      LOGICAL :: L_KXLT = .FALSE.
+      INTEGER(KIND=JWIM), INTENT(IN), OPTIONAL :: QUEUE
+
+     IF(PRESENT(IXLG)) L_IXLG = IXLG
+     IF(PRESENT(KXLT)) L_KXLT = KXLT
+
+
+      IF(L_IXLG.OR.L_KXLT)THEN
+         !... copy only selected members
+         IF(L_IXLG)THEN
+             CALL SELF%F_IXLG%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+         IF(L_KXLT)THEN
+             CALL SELF%F_KXLT%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         ENDIF
+      ELSE
+         !... copy entire struct
+         CALL SELF%F_IXLG%SYNC_HOST_RDWR(QUEUE=QUEUE)
+         CALL SELF%F_KXLT%SYNC_HOST_RDWR(QUEUE=QUEUE)
+      ENDIF
+
+   END SUBROUTINE WVGRIDGLO_SYNC_HOST_RDWR
+
+   SUBROUTINE WVGRIDGLO_DELETE_DEVICE_DATA(SELF)
+      TYPE(WVGRIDGLO) :: SELF
+
+      CALL SELF%F_IXLG%DELETE_DEVICE_DATA()
+      CALL SELF%F_KXLT%DELETE_DEVICE_DATA()
+
+   END SUBROUTINE WVGRIDGLO_DELETE_DEVICE_DATA
+
+END MODULE WVGRIDGLO_TYPE_MOD

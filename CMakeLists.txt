@@ -96,6 +96,17 @@ if( HAVE_OMP )
 endif()
 
 ### Apply Loki source-to-source transformations to the ecWam physics
+option( ECWAM_HANDTUNED_SP
+        "Build the checked-in handtuned separate-memory SP GPU sources as ecwam_sp" OFF )
+if( ECWAM_HANDTUNED_SP )
+  if( NOT ECWAM_ENABLE_SINGLE_PRECISION OR ECWAM_ENABLE_DOUBLE_PRECISION )
+    message( FATAL_ERROR "ECWAM_HANDTUNED_SP requires SP=ON and DP=OFF" )
+  endif()
+  if( ECWAM_ENABLE_LOKI )
+    message( FATAL_ERROR "ECWAM_HANDTUNED_SP uses checked-in sources; set ECWAM_ENABLE_LOKI=OFF" )
+  endif()
+endif()
+
 ecbuild_add_option( FEATURE LOKI
                     DEFAULT OFF
                     DESCRIPTION "Apply Loki transformations to ecWam physics"
@@ -125,7 +136,11 @@ endif()
 ecbuild_add_option( FEATURE ACC
                     DESCRIPTION "OpenACC" DEFAULT OFF
                     REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran"
-                    CONDITION HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack" )
+                    CONDITION ECWAM_HANDTUNED_SP OR (HAVE_LOKI AND NOT LOKI_MODE MATCHES "idem|idem-stack") )
+
+if( ECWAM_HANDTUNED_SP AND NOT HAVE_ACC )
+  message( FATAL_ERROR "ECWAM_HANDTUNED_SP requires ECWAM_ENABLE_ACC=ON" )
+endif()
 
 ### CUDA
 include(CheckLanguage)
@@ -135,6 +150,16 @@ ecbuild_add_option( FEATURE CUDA
     CONDITION CMAKE_CUDA_COMPILER AND HAVE_ACC )
 if( HAVE_CUDA )
     enable_language( CUDA )
+endif()
+
+if( ECWAM_HANDTUNED_SP AND NOT HAVE_CUDA )
+  message( FATAL_ERROR "ECWAM_HANDTUNED_SP separate memory requires ECWAM_ENABLE_CUDA=ON" )
+endif()
+
+if( ECWAM_HANDTUNED_SP AND
+    (NOT CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC" OR
+     CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 26.5) )
+  message( FATAL_ERROR "ECWAM_HANDTUNED_SP requires NVHPC >= 26.5 for the checked-in minctapersm directives (reproduced with 26.9)" )
 endif()
 
 ### GPU-aware MPI

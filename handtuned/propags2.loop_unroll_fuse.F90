@@ -1,0 +1,277 @@
+! (C) Copyright 1989- ECMWF.
+!
+! This software is licensed under the terms of the Apache Licence Version 2.0
+! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! In applying this licence, ECMWF does not waive the privileges and immunities
+! granted to it by virtue of its status as an intergovernmental organisation
+! nor does it submit to any jurisdiction.
+!
+SUBROUTINE PROPAGS2 (F1, F3, NINF, NSUP, KIJS, KIJL, NANG, ND3SF1, ND3EF1, ND3S, ND3E)
+
+  ! ----------------------------------------------------------------------
+
+  !**** *PROPAGS2* -  ADVECTION USING THE CORNER TRANSPORT SCHEME IN SPACE
+
+  !*    PURPOSE.
+  !     --------
+
+  !       COMPUTATION OF A PROPAGATION TIME STEP.
+
+  !**   INTERFACE.
+  !     ----------
+
+  !       *CALL* *PROPAGS2(F1, F3, NINF, NSUP, KIJS, KIJL, NANG, ND3SF1, ND3EF1, ND3S, ND3E)*
+  !          *F1*          - SPECTRUM AT TIME T (with exchange halo).
+  !          *F3*          - SPECTRUM AT TIME T+DELT
+  !          *NINF:NSUP+1* - 1st DIMENSION OF F1 and F3
+  !          *KIJS*        - ACTIVE INDEX OF FIRST POINT
+  !          *KIJL*        - ACTIVE INDEX OF LAST POINT
+  !          *NANG*        - NUMBER OF DIRECTIONS
+  !          *ND3SF1*      - LOWER 3rd DIMENSION OF F1
+  !          *ND3EF1*      - UPPER 3d DIMENSION OF F1
+  !          *ND3S*        - FREQUENCY INDEX SOLVED BY THIS CALL ND3S:ND3E
+  !          *ND3E*        - FREQUENCY INDEX SOLVED BY THIS CALL ND3S:ND3E
+
+  !     METHOD.
+  !     -------
+
+  !!  need text !!!!!!!!
+
+  !     EXTERNALS.
+  !     ----------
+
+
+  !     REFERENCE.
+  !     ----------
+
+  !      See IFS Documentation, part VII
+
+  ! ----------------------------------------------------------------------
+
+  USE PARKIND_WAVE, ONLY: JWIM, JWRB, JWRU
+
+  USE YOWFRED, ONLY: COSTH, SINTH
+  USE YOWSTAT, ONLY: ICASE, IREFRA
+  USE YOWTEST, ONLY: IU06
+  USE YOWUBUF, ONLY: KLAT, KLON, KCOR, WLATN, WLONN, WCORN, WKPMN, WMPMN, LLWLATN, LLWLONN, LLWCORN, LLWKPMN, LLWMPMN, SUMWN,  &
+  & JXO, JYO, KCR, KPM, MPM
+
+  USE YOMHOOK, ONLY: LHOOK, DR_HOOK, JPHOOK
+  USE YOWABORT, ONLY: WAM_ABORT
+
+  ! ----------------------------------------------------------------------
+
+  IMPLICIT NONE
+
+#include "abort1.intfb.h"
+
+  REAL(KIND=JWRB), INTENT(IN), DIMENSION(NINF:NSUP + 1, NANG, ND3SF1:ND3EF1) :: F1
+  REAL(KIND=JWRB), INTENT(INOUT), DIMENSION(NINF:NSUP + 1, NANG, ND3S:ND3E) :: F3
+  INTEGER(KIND=JWIM), INTENT(IN) :: NINF, NSUP, KIJS, KIJL
+  INTEGER(KIND=JWIM), INTENT(IN) :: NANG, ND3SF1, ND3EF1, ND3S, ND3E
+
+
+  INTEGER(KIND=JWIM) :: K, M, IJ
+  INTEGER(KIND=JWIM) :: IC, ICR, ICL
+  INTEGER(KIND=JWIM) :: KP1, KM1, MM1, MP1, KNS, KEW
+
+  REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+  REAL(KIND=JWRB) :: spectrum_value
+
+  ! ----------------------------------------------------------------------
+
+  IF (LHOOK) CALL DR_HOOK('PROPAGS2', 0, ZHOOK_HANDLE)
+
+  !*    SPHERICAL OR CARTESIAN GRID?
+  !     ----------------------------
+  IF (ICASE == 1) THEN
+
+    !*      SPHERICAL GRID.
+    !       ---------------
+
+    IF (IREFRA /= 2 .and. IREFRA /= 3) THEN
+      !*      WITHOUT DEPTH OR/AND CURRENT REFRACTION.
+      !       ----------------------------------------
+
+#ifdef OMPGPU
+!$omp target teams distribute parallel do collapse( 3 ) map( to:F1,F3,KLON,KLAT,KCOR,SUMWN,WLONN,WLATN,  &
+!$omp & WCORN,JXO,JYO,KCR,WKPMN,LLWKPMN,KPM )
+#else
+!$acc parallel loop independent collapse( 3 ) present( F1,F3,KLON,KLAT,KCOR,SUMWN,WLONN,WLATN,WCORN,JXO,JYO,KCR,WKPMN,KPM )
+#endif
+      DO K=1,NANG
+        DO M=ND3S,ND3E
+
+#ifndef OMPGPU
+          !DIR$ IVDEP
+          !DIR$ PREFERVECTOR
+#endif
+          DO IJ=KIJS,KIJL
+            F3(IJ, K, M) = (1.0_JWRB - SUMWN(IJ, K, M))*F1(IJ, K, M) + WLONN(IJ, K, M, JXO(K, 1))*F1(KLON(IJ, JXO(K, 1)), K, M) + &
+            &  WLATN(IJ, K, M, JYO(K, 1), 1)*F1(KLAT(IJ, JYO(K, 1), 1), K, M) + WLATN(IJ, K, M, JYO(K, 1), 2)*F1(KLAT(IJ, JYO(K,  &
+            & 1), 2), K, M) + WCORN(IJ, K, M, 1, 1)*F1(KCOR(IJ, KCR(K, 1), 1), K, M) + WCORN(IJ, K, M, 1, 2)*F1(KCOR(IJ, KCR(K, 1 &
+            & ), 2), K, M) + WKPMN(IJ, K, M, -1)*F1(IJ, KPM(K, -1), M) + WKPMN(IJ, K, M, 1)*F1(IJ, KPM(K, 1), M)
+          END DO
+
+        END DO
+      END DO
+#ifdef OMPGPU
+!$omp end target teams distribute parallel do
+#else
+!$acc end parallel loop
+#endif
+
+    ELSE
+      !*      DEPTH AND CURRENT REFRACTION.
+      !       -----------------------------
+#ifdef OMPGPU
+!$omp target teams distribute parallel do collapse( 3 ) map( to:F1,F3,SUMWN,WLONN,KLON,WLATN,KLAT,WCORN,KCOR,WKPMN,KPM,WMPMN,MPM  &
+!$omp & )
+#else
+!$acc parallel present( F1,F3,SUMWN,WLONN,KLON,WLATN,KLAT,WCORN,KCOR, WKPMN,KPM,WMPMN,MPM ) minctapersm(6) vector_length(64)
+!$acc loop gang vector private(spectrum_value)
+#endif
+      DO IJ=KIJS,KIJL
+!$acc loop seq
+      DO M=ND3S,ND3E
+!$acc loop seq
+        DO K=1,NANG
+
+          ! Loki loop-fusion group(default)
+!$loki fused-loop group( default )
+            ! Loki loop-fusion - body 0 begin
+            spectrum_value = (1.0_JWRB - SUMWN(IJ, K, M))*F1(IJ, K, M)
+            ! Loki loop-fusion - body 0 end
+            ! Loki loop-fusion - body 1 begin
+            spectrum_value = spectrum_value + WLONN(IJ, K, M, 1)*F1(KLON(IJ, 1), K, M)
+            ! Loki loop-fusion - body 1 end
+            ! Loki loop-fusion - body 2 begin
+            spectrum_value = spectrum_value + WLONN(IJ, K, M, 2)*F1(KLON(IJ, 2), K, M)
+            ! Loki loop-fusion - body 2 end
+            ! Loki loop-fusion - body 3 begin
+            spectrum_value = spectrum_value + WLATN(IJ, K, M, 1, 1)*F1(KLAT(IJ, 1, 1), K, M)
+            ! Loki loop-fusion - body 3 end
+            ! Loki loop-fusion - body 4 begin
+            spectrum_value = spectrum_value + WLATN(IJ, K, M, 2, 1)*F1(KLAT(IJ, 2, 1), K, M)
+            ! Loki loop-fusion - body 4 end
+            ! Loki loop-fusion - body 5 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 1, 1)*F1(KCOR(IJ, KCR(K, 1), 1), K, M)
+            ! Loki loop-fusion - body 5 end
+            ! Loki loop-fusion - body 6 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 2, 1)*F1(KCOR(IJ, KCR(K, 2), 1), K, M)
+            ! Loki loop-fusion - body 6 end
+            ! Loki loop-fusion - body 7 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 3, 1)*F1(KCOR(IJ, KCR(K, 3), 1), K, M)
+            ! Loki loop-fusion - body 7 end
+            ! Loki loop-fusion - body 8 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 4, 1)*F1(KCOR(IJ, KCR(K, 4), 1), K, M)
+            ! Loki loop-fusion - body 8 end
+            ! Loki loop-fusion - body 9 begin
+            spectrum_value = spectrum_value + WLATN(IJ, K, M, 1, 2)*F1(KLAT(IJ, 1, 2), K, M)
+            ! Loki loop-fusion - body 9 end
+            ! Loki loop-fusion - body 10 begin
+            spectrum_value = spectrum_value + WLATN(IJ, K, M, 2, 2)*F1(KLAT(IJ, 2, 2), K, M)
+            ! Loki loop-fusion - body 10 end
+            ! Loki loop-fusion - body 11 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 1, 2)*F1(KCOR(IJ, KCR(K, 1), 2), K, M)
+            ! Loki loop-fusion - body 11 end
+            ! Loki loop-fusion - body 12 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 2, 2)*F1(KCOR(IJ, KCR(K, 2), 2), K, M)
+            ! Loki loop-fusion - body 12 end
+            ! Loki loop-fusion - body 13 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 3, 2)*F1(KCOR(IJ, KCR(K, 3), 2), K, M)
+            ! Loki loop-fusion - body 13 end
+            ! Loki loop-fusion - body 14 begin
+            spectrum_value = spectrum_value + WCORN(IJ, K, M, 4, 2)*F1(KCOR(IJ, KCR(K, 4), 2), K, M)
+            ! Loki loop-fusion - body 14 end
+            ! Loki loop-fusion - body 15 begin
+            spectrum_value = spectrum_value + WKPMN(IJ, K, M, -1)*F1(IJ, KPM(K, -1), M)
+            ! Loki loop-fusion - body 15 end
+            ! Loki loop-fusion - body 16 begin
+            spectrum_value = spectrum_value + WMPMN(IJ, K, M, -1)*F1(IJ, K, MPM(M, -1))
+            ! Loki loop-fusion - body 16 end
+            ! Loki loop-fusion - body 17 begin
+            spectrum_value = spectrum_value + WKPMN(IJ, K, M, 1)*F1(IJ, KPM(K, 1), M)
+            ! Loki loop-fusion - body 17 end
+            ! Loki loop-fusion - body 18 begin
+            spectrum_value = spectrum_value + WMPMN(IJ, K, M, 1)*F1(IJ, K, MPM(M, 1))
+            ! Loki loop-fusion - body 18 end
+            F3(IJ, K, M) = spectrum_value
+          END DO
+
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+          ! Loki loop-fusion group(default) - loop hoisted
+
+
+          ! Loki loop-fusion group(default) - loop hoisted
+
+          ! Loki loop-fusion group(default) - loop hoisted
+
+
+          ! Loki loop-fusion group(default) - loop hoisted
+
+          ! Loki loop-fusion group(default) - loop hoisted
+
+
+        END DO
+      END DO
+#ifdef OMPGPU
+!$omp end target teams distribute parallel do
+#else
+!$acc end parallel
+#endif
+
+    END IF
+
+  ELSE
+    !*    CARTESIAN GRID.
+    !     ---------------
+    IF (IREFRA == 2 .or. IREFRA == 3) THEN
+      !*      WITHOUT DEPTH OR/AND CURRENT REFRACTION.
+      !       ----------------------------------------
+      WRITE(IU06, *) '******************************************'
+      WRITE(IU06, *) '* PROPAGS2:                              *'
+      WRITE(IU06, *) '* CORNER TRANSPORT SCHEME NOT YET READY  *'
+      WRITE(IU06, *) '* FOR  CARTESIAN GRID !                  *'
+      WRITE(IU06, *) '*                                        *'
+      WRITE(IU06, *) '* PROGRAM ABORTS.   PROGRAM ABORTS.      *'
+      WRITE(IU06, *) '*                                        *'
+      WRITE(IU06, *) '******************************************'
+      CALL ABORT1()
+    ELSE
+      !*      DEPTH AND CURRENT REFRACTION.
+      !       ----------------------------
+      WRITE(IU06, *) '******************************************'
+      WRITE(IU06, *) '* PROPAGS2:                              *'
+      WRITE(IU06, *) '* CORNER TRANSPORT SCHEME NOT YET READY  *'
+      WRITE(IU06, *) '* FOR  CARTESIAN GRID !                  *'
+      WRITE(IU06, *) '* FOR DEPTH OR/AND CURRENT REFRACTION !  *'
+      WRITE(IU06, *) '*                                        *'
+      WRITE(IU06, *) '* PROGRAM ABORTS.   PROGRAM ABORTS.      *'
+      WRITE(IU06, *) '*                                        *'
+      WRITE(IU06, *) '******************************************'
+      CALL ABORT1()
+    END IF
+
+  END IF
+
+  ! ----------------------------------------------------------------------
+
+  IF (LHOOK) CALL DR_HOOK('PROPAGS2', 1, ZHOOK_HANDLE)
+
+END SUBROUTINE PROPAGS2
