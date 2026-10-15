@@ -68,7 +68,7 @@ SUBROUTINE PROPAG_WAM (BLK2GLO, WAVNUM, CGROUP, OMOSNH2KD, FL1, &
 #include "proenvhalo.intfb.h"
 #include "propags.intfb.h"
 #include "propags1.intfb.h"
-#include "propags2.intfb.h"
+#include "propags2.loop_unroll_fuse.intfb.h"
 #include "propdot.intfb.h"
 
       TYPE(WVGRIDGLO), INTENT(IN) :: BLK2GLO

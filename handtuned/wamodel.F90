@@ -125,8 +125,8 @@ SUBROUTINE WAMODEL (NADV, LINIONLY, LFRSTRST, LDSTOP, LDWRRE, BLK2GLO,&
 #include "writsta.intfb.h"
 
 #ifdef WAM_GPU
-#include "outbs_loki_gpu.intfb.h"
-#include "wamintgr_loki_gpu.intfb.h"
+#include "outbs_loki_gpu.sccs_hoist.intfb.h"
+#include "wamintgr_loki_gpu.sccs_hoist.intfb.h"
 #else
 #include "outbs.intfb.h"
 #include "wamintgr.intfb.h"
