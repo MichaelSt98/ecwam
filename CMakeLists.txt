@@ -143,6 +143,12 @@ ecbuild_add_option( FEATURE GPU_AWARE_MPI
                     DESCRIPTION "Enable GPU-aware MPI"
                     CONDITION HAVE_ACC AND MPI_Fortran_HAVE_F08_MODULE )
 
+ecbuild_add_option( FEATURE SINPUT_ARD_VECTOR_MATH
+                    DESCRIPTION "Opt-in Intel classic Bit SP SINPUT_ARD vector math with changed rounding"
+                    DEFAULT OFF
+                    CONDITION CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" AND HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI AND
+                              CMAKE_BUILD_TYPE MATCHES "^[Bb][Ii][Tt]$" )
+
 ### Sources
 
 ecbuild_override_compiler_flags(

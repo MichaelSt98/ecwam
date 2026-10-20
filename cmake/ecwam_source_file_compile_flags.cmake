@@ -42,6 +42,13 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI|NVHPC" AND CMAKE_BUILD_TYPE MATCHE
   set_source_files_properties( secondhh.F90 PROPERTIES COMPILE_OPTIONS "${${PNAME}_Fortran_FLAGS_DEBUG} -Ktrap=inv,ovf")
 endif()
 
+if( HAVE_SINPUT_ARD_VECTOR_MATH )
+  # Enable SVML without changing the source or global runtime exception masks.
+  # The target expression keeps double precision unchanged in mixed builds.
+  set_property( SOURCE sinput_ard.F90 APPEND PROPERTY COMPILE_OPTIONS
+    "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,ecwam_sp>:-fpe3>" )
+endif()
+
 ### The file grib2wgrid.F90 is sensitive to optimizations in single precision builds.
 #   This leads to non-neglibible differences
 #   of average 'swh' when running "chief".
