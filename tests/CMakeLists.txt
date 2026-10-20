@@ -44,7 +44,7 @@ endforeach()
 # Check CPU fusion independently of per-source vector-math overrides. Both
 # worker objects use identical precise/no-FMA settings, including on a build
 # whose production SNONLIN was compiled with different exception assumptions.
-if( HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI AND
+if( HAVE_TESTS AND HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI AND
     CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" AND CMAKE_BUILD_TYPE MATCHES "^[Bb][Ii][Tt]$" )
   ecbuild_add_test(
     TARGET ecwam_test_snonlin_fusion_sp
