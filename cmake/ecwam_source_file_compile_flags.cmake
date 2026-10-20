@@ -49,6 +49,11 @@ if( HAVE_SINPUT_ARD_VECTOR_MATH )
     "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,ecwam_sp>:-fpe3>" )
 endif()
 
+if( HAVE_PROPAG_FACTORED_PAIRS )
+  set_property( SOURCE propags2.F90 ctuwupdt.F90 wvdealloc.F90 APPEND PROPERTY COMPILE_DEFINITIONS
+    "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,ecwam_sp>:ECWAM_PROPAG_FACTORED_PAIRS>" )
+endif()
+
 ### The file grib2wgrid.F90 is sensitive to optimizations in single precision builds.
 #   This leads to non-neglibible differences
 #   of average 'swh' when running "chief".

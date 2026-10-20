@@ -46,6 +46,9 @@ USE YOWPCONS , ONLY : ZPI
 
 USE YOMHOOK  , ONLY : LHOOK,   DR_HOOK, JPHOOK
 USE OML_MOD  , ONLY : OML_GET_MAX_THREADS
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+USE YOWPROPAG_PAIRS, ONLY: P2_RELEASE_PAIRS,P2_PREPARE_PAIRS
+#endif
       
 ! ----------------------------------------------------------------------
       IMPLICIT NONE
@@ -86,6 +89,10 @@ DATA LFRSTCTU /.TRUE./
 ! ----------------------------------------------------------------------
 
 IF (LHOOK) CALL DR_HOOK('CTUWUPDT',0,ZHOOK_HANDLE)
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+! Invalidate before rebuilding full expanded weights and checking CFL.
+CALL P2_RELEASE_PAIRS()
+#endif
 
 !$acc data create(WLATM1,WCORM1,DP)
 
@@ -342,6 +349,10 @@ ENDIF
 IF (ALLOCATED(THDD)) DEALLOCATE(THDD)
 IF (ALLOCATED(THDC)) DEALLOCATE(THDC)
 IF (ALLOCATED(SDOT)) DEALLOCATE(SDOT)
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+! Only successful, obstruction-attenuated weights and their final flags are packed.
+IF (IREFRA==2 .OR. IREFRA==3) CALL P2_PREPARE_PAIRS()
+#endif
 
 !$acc end data
 

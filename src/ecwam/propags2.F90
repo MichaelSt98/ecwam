@@ -62,6 +62,10 @@ SUBROUTINE PROPAGS2 (F1, F3, NINF, NSUP, KIJS, KIJL, NANG, ND3SF1, ND3EF1, ND3S,
 
       USE YOMHOOK  , ONLY : LHOOK,   DR_HOOK, JPHOOK
       USE YOWABORT , ONLY : WAM_ABORT
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+      USE YOWPROPAG_PAIRS, ONLY : P2_FACTORED,P2_LAT_BASE,P2_COR_BASE
+      USE YOWUBUF, ONLY : WLAT,WCOR
+#endif
 
 ! ----------------------------------------------------------------------
 
@@ -79,6 +83,10 @@ SUBROUTINE PROPAGS2 (F1, F3, NINF, NSUP, KIJS, KIJL, NANG, ND3SF1, ND3EF1, ND3S,
       INTEGER(KIND=JWIM) :: IC, ICR, ICL 
       INTEGER(KIND=JWIM) :: KP1, KM1, MM1, MP1, KNS, KEW
 
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+      LOGICAL :: LSPECTRAL
+      REAL(KIND=JWRB) :: ZUPDATE,ZA,ZBASE
+#endif
       REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 ! ----------------------------------------------------------------------
@@ -124,6 +132,19 @@ IF (LHOOK) CALL DR_HOOK('PROPAGS2',0,ZHOOK_HANDLE)
 !*      DEPTH AND CURRENT REFRACTION.
 !       -----------------------------
 
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+          DO M = ND3S, ND3E
+            DO K = 1, NANG
+#define PROPAGS2_IJS KIJS
+#define PROPAGS2_IJL KIJL
+#define P2_OUT(I,K,M) F3(I,K,M)
+#include "propags2_refraction_plane.h"
+#undef P2_OUT
+#undef PROPAGS2_IJS
+#undef PROPAGS2_IJL
+            ENDDO
+          ENDDO
+#else
           !$acc parallel loop independent collapse(3) &
           !$acc & present(F1,F3,SUMWN,WLONN,KLON,WLATN,KLAT,WCORN,KCOR, &
           !$acc &         WKPMN,KPM,WMPMN,MPM)
@@ -190,6 +211,7 @@ IF (LHOOK) CALL DR_HOOK('PROPAGS2',0,ZHOOK_HANDLE)
             ENDDO
           ENDDO
           !$acc end parallel loop
+#endif
 
         ENDIF
 

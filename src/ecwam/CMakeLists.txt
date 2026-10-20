@@ -45,6 +45,10 @@ if( NOT TARGET ecwam_intfb )
             COMPONENT interfaces )
 endif()
 
+if( HAVE_PROPAG_FACTORED_PAIRS )
+  list( APPEND ecwam_srcs yowpropag_pairs.F90 propags2_pairs_plane.h propags2_refraction_plane.h )
+endif()
+
 list( APPEND ecwam_srcs
   abort1.F90
   adjust.F90

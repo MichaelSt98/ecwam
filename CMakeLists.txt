@@ -149,6 +149,11 @@ ecbuild_add_option( FEATURE SINPUT_ARD_VECTOR_MATH
                     CONDITION CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" AND HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI AND
                               CMAKE_BUILD_TYPE MATCHES "^[Bb][Ii][Tt]$" )
 
+ecbuild_add_option( FEATURE PROPAG_FACTORED_PAIRS
+                    DESCRIPTION "Opt-in CPU SP compact propagation coefficients (changed rounding and preparation peak)"
+                    DEFAULT OFF
+                    CONDITION HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI )
+
 ### Sources
 
 ecbuild_override_compiler_flags(

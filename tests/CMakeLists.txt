@@ -65,3 +65,20 @@ if( HAVE_TESTS AND HAVE_sp AND HAVE_MPI AND NOT HAVE_ACC )
     TEST_REQUIRES ecwam_test_etopo1_oper_an_fc_O48_sp_mpi4_omp1
   )
 endif()
+
+
+if( HAVE_TESTS AND HAVE_sp AND HAVE_PROPAG_FACTORED_PAIRS )
+  set( pair_check_flags "" )
+  if( CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" )
+    set( pair_check_flags "-fpe0 -check bounds" )
+  endif()
+  ecbuild_add_test(
+    TARGET ecwam_test_propag_pairs_sp
+    SOURCES propags2_tiling_check.F90
+    LIBS ecwam_sp
+    DEFINITIONS WAM_HAVE_SINGLE_PRECISION
+    FFLAGS "${pair_check_flags}"
+    OMP 4
+  )
+  ecwam_target_compile_definitions_FILENAME( ecwam_test_propag_pairs_sp )
+endif()

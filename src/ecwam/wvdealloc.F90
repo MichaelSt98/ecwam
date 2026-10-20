@@ -38,6 +38,12 @@
 
       USE YOMHOOK  , ONLY : LHOOK,   DR_HOOK, JPHOOK
       USE FIELD_FACTORY_MODULE, ONLY : FIELD_DELETE
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+      USE YOWPROPAG_PAIRS, ONLY: P2_RELEASE_PAIRS
+      USE YOWUBUF, ONLY: LUPDTWGHT
+      USE YOWREFD, ONLY: LLUPDTTD
+      USE YOWSTAT, ONLY: IREFRA
+#endif
 ! ----------------------------------------------------------------------
 
       IMPLICIT NONE
@@ -48,6 +54,11 @@
 ! ----------------------------------------------------------------------
 
       IF (LHOOK) CALL DR_HOOK('WVDEALLOC',0,ZHOOK_HANDLE)
+#if defined(ECWAM_PROPAG_FACTORED_PAIRS) && !defined(_OPENACC)
+      CALL P2_RELEASE_PAIRS()
+      LUPDTWGHT=.TRUE.
+      IF (IREFRA/=0) LLUPDTTD=.TRUE.
+#endif
 
 !     1.  DEALLOCATE NECESSARY ARRAYS
 !         -------------------------
