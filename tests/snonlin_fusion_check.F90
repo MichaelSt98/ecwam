@@ -1,0 +1,107 @@
+! Compare complete split/fused routines, including coincident spectral bins.
+PROGRAM SNONLIN_FUSION_CHECK
+  USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY : NULOUT => OUTPUT_UNIT
+  USE PARKIND_WAVE, ONLY : JWIM, JWRB
+  USE YOWPARAM, ONLY : NANG, NFRE
+  USE YOWINDN, ONLY : MFRSTLW, KFRH, MLSTHG, DAL1, DAL2, IKP, IKP1, IKM, IKM1, &
+    & INLCOEF, RNLCOEF, AF11, FKLAP, FKLAP1, FKLAM, FKLAM1, K1W, K11W, K2W, K21W
+  USE YOWSTAT, ONLY : ISNONLIN
+  USE YOMHOOK, ONLY : LHOOK
+  USE YOWABORT, ONLY : WAM_ABORT
+  IMPLICIT NONE
+  INTEGER(KIND=JWIM) :: IJ, JK, JM, JH, IN, IFIRST, ICASE, ISIZE
+  INTEGER(KIND=JWIM), PARAMETER :: ISIZES(5) = [1, 7, 8, 31, 32]
+  REAL(KIND=JWRB), ALLOCATABLE :: ZF(:,:,:), ZSL0(:,:,:), ZD0(:,:,:), ZSL1(:,:,:), ZD1(:,:,:)
+  REAL(KIND=JWRB), ALLOCATABLE :: ZWAVNUM(:,:), ZDEPTH(:), ZAKMEAN(:)
+
+#include "snonlin.intfb.h"
+#define SNONLIN SNONLIN_REFERENCE
+#include "snonlin.intfb.h"
+#undef SNONLIN
+
+  LHOOK = .FALSE.
+  ISNONLIN = 0
+  NANG = 8
+  NFRE = 7
+  MFRSTLW = -1
+  KFRH = 3
+  MLSTHG = 9
+  DAL1 = 1.2_JWRB
+  DAL2 = 1.3_JWRB
+  ALLOCATE(IKP(MLSTHG), IKP1(MLSTHG), IKM(MLSTHG), IKM1(MLSTHG))
+  ALLOCATE(INLCOEF(5,MLSTHG), RNLCOEF(25,MLSTHG), AF11(MLSTHG))
+  ALLOCATE(FKLAP(MLSTHG), FKLAP1(MLSTHG), FKLAM(MLSTHG), FKLAM1(MLSTHG))
+  ALLOCATE(K1W(NANG,2), K11W(NANG,2), K2W(NANG,2), K21W(NANG,2))
+  DO JM = 1, MLSTHG
+    IKP(JM) = JM+1
+    IKP1(JM) = JM+2
+    IKM(JM) = JM-2
+    IKM1(JM) = JM-1
+    ! Input reads are always resolved; guarded output destinations may lie outside.
+    INLCOEF(:,JM) = [MIN(JM,NFRE), MIN(JM+1,NFRE), MIN(JM+2,NFRE), &
+      & MIN(NFRE,MAX(1,JM-2)), MIN(NFRE,MAX(1,JM-1))]
+    RNLCOEF(1,JM) = 1.0_JWRB
+    DO JK = 2, 25
+      RNLCOEF(JK,JM) = REAL(JK+JM,JWRB)/100.0_JWRB
+    ENDDO
+    AF11(JM) = REAL(JM,JWRB)*0.1_JWRB
+    FKLAP(JM) = 0.4_JWRB
+    FKLAP1(JM) = 0.6_JWRB
+    FKLAM(JM) = 0.3_JWRB
+    FKLAM1(JM) = 0.7_JWRB
+  ENDDO
+
+  DO ICASE = 1, 3
+    DO JH = 1, 2
+      DO JK = 1, NANG
+        IF (ICASE == 1) THEN
+          K1W(JK,JH) = MOD(JK,NANG)+1
+          K11W(JK,JH) = MOD(JK+1,NANG)+1
+          K2W(JK,JH) = MOD(JK+2,NANG)+1
+          K21W(JK,JH) = MOD(JK+3,NANG)+1
+        ELSE
+          K1W(JK,JH) = JK
+          K11W(JK,JH) = JK
+          K2W(JK,JH) = JK
+          K21W(JK,JH) = JK
+        ENDIF
+      ENDDO
+    ENDDO
+    IF (ICASE == 3) THEN
+      IKP(3:5) = 4
+      IKP1(3:5) = 4
+      IKM(3:5) = 4
+      IKM1(3:5) = 4
+    ENDIF
+    DO ISIZE = 1, SIZE(ISIZES)
+      IN = ISIZES(ISIZE)
+      ALLOCATE(ZF(IN,NANG,NFRE), ZSL0(IN,NANG,NFRE), ZD0(IN,NANG,NFRE))
+      ALLOCATE(ZSL1(IN,NANG,NFRE), ZD1(IN,NANG,NFRE), ZWAVNUM(IN,NFRE), ZDEPTH(IN), ZAKMEAN(IN))
+      DO IJ = 1, IN
+        ZDEPTH(IJ) = REAL(5+IJ,JWRB)
+        ZAKMEAN(IJ) = 0.15_JWRB
+      ENDDO
+      DO JK = 1, NANG
+        DO JM = 1, NFRE
+          DO IJ = 1, IN
+            ZF(IJ,JK,JM) = REAL(IJ+JK+JM,JWRB)*0.001_JWRB
+            ZSL0(IJ,JK,JM) = REAL(IJ-JK+JM,JWRB)*0.0001_JWRB
+            ZD0(IJ,JK,JM) = -0.001_JWRB
+            ZWAVNUM(IJ,JM) = 0.1_JWRB
+          ENDDO
+        ENDDO
+      ENDDO
+      ZSL1(:,:,:) = ZSL0(:,:,:)
+      ZD1(:,:,:) = ZD0(:,:,:)
+      IFIRST = MIN(3,IN)
+      CALL SNONLIN_REFERENCE(IFIRST,IN,ZF,ZD0,ZSL0,ZWAVNUM,ZDEPTH,ZAKMEAN)
+      CALL SNONLIN(IFIRST,IN,ZF,ZD1,ZSL1,ZWAVNUM,ZDEPTH,ZAKMEAN)
+      IF (ANY(TRANSFER(ZSL0,[0_JWIM]) /= TRANSFER(ZSL1,[0_JWIM]))) &
+        & CALL WAM_ABORT('Fusion source mismatch',__FILE__,__LINE__)
+      IF (ANY(TRANSFER(ZD0,[0_JWIM]) /= TRANSFER(ZD1,[0_JWIM]))) &
+        & CALL WAM_ABORT('Fusion derivative mismatch',__FILE__,__LINE__)
+      WRITE(NULOUT,*) 'Bit-identical: case=',ICASE,' horizontal size=',IN,' first=',IFIRST
+      DEALLOCATE(ZF,ZSL0,ZD0,ZSL1,ZD1,ZWAVNUM,ZDEPTH,ZAKMEAN)
+    ENDDO
+  ENDDO
+END PROGRAM SNONLIN_FUSION_CHECK

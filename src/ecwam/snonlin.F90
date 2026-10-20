@@ -110,9 +110,13 @@
       REAL(KIND=JWRB) :: GW5, GW6, GW7, GW8, FKLAMMA, FKLAMMB, FKLAMM2
       REAL(KIND=JWRB) :: FKLAMA2, FKLAMB2, FKLAM12, FKLAM22
       REAL(KIND=JWRB) :: SAP, SAM, FIJ, FAD1, FAD2, FCEN
+      REAL(KIND=JWRB) :: ZAD, ZDELAD, ZDELAP, ZDELAM
 
       REAL(KIND=JWRB), DIMENSION(KIJL) :: XNU, SIG_TH
-      REAL(KIND=JWRB), DIMENSION(KIJL) :: FTEMP, AD, DELAD, DELAP, DELAM, ENHFR
+      REAL(KIND=JWRB), DIMENSION(KIJL) :: FTEMP, ENHFR
+#if defined(WAM_GPU) || defined(_OPENACC)
+      REAL(KIND=JWRB), DIMENSION(KIJL) :: AD, DELAD, DELAP, DELAM
+#endif
 
 
 ! ----------------------------------------------------------------------
@@ -233,6 +237,8 @@
 !*    2.1.1.1 LOOP OVER GRIDPOINTS.. NONLINEAR TRANSFER AND
 !*            DIAGONAL MATRIX OF FUNCTIONAL DERIVATIVE.
 !             ----------------------------------------------
+#if defined(WAM_GPU) || defined(_OPENACC)
+!             Retain split horizontal loops for GPU source transformations.
               DO IJ=KIJS,KIJL
                 SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )             &
      &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
@@ -306,6 +312,44 @@
                 FLD(IJ,K11,MP1) = FLD(IJ,K11,MP1) + DELAP(IJ)*FKLAPB2
               ENDDO
               !$loki end split-read-write
+#else
+!             Keep interaction intermediates in registers on the CPU.
+!             Spectral destinations may coincide: preserve every update's order.
+              DO IJ=KIJS,KIJL
+                SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )             &
+     &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
+                SAM = GW5*FL1(IJ,K2 ,IM ) + GW6*FL1(IJ,K21,IM )             &
+     &              + GW7*FL1(IJ,K2 ,IM1) + GW8*FL1(IJ,K21,IM1)
+                FIJ = FL1(IJ,K,IC)
+                FAD1 = FIJ*(SAP+SAM)
+                FAD2 = FAD1-2.0_JWRB*SAP*SAM
+                FAD1 = FAD1+FAD2
+                FCEN = FTEMP(IJ)*FIJ
+                ZAD = FAD2*FCEN
+                ZDELAD = FAD1*FTEMP(IJ)
+                ZDELAP = (FIJ-2.0_JWRB*SAM)*DAL1*FCEN
+                ZDELAM = (FIJ-2.0_JWRB*SAP)*DAL2*FCEN
+
+                SL(IJ,K,MC) = SL(IJ,K,MC) - 2.0_JWRB*ZAD
+                FLD(IJ,K,MC) = FLD(IJ,K,MC) - 2.0_JWRB*ZDELAD
+                SL(IJ,K2,MM) = SL(IJ,K2,MM) + ZAD*FKLAMM1
+                FLD(IJ,K2,MM) = FLD(IJ,K2,MM) + ZDELAM*FKLAM12
+                SL(IJ,K21,MM) = SL(IJ,K21,MM) + ZAD*FKLAMM2
+                FLD(IJ,K21,MM) = FLD(IJ,K21,MM) + ZDELAM*FKLAM22
+                SL(IJ,K2,MM1) = SL(IJ,K2,MM1) + ZAD*FKLAMMA
+                FLD(IJ,K2,MM1) = FLD(IJ,K2,MM1) + ZDELAM*FKLAMA2
+                SL(IJ,K21,MM1) = SL(IJ,K21,MM1) + ZAD*FKLAMMB
+                FLD(IJ,K21,MM1) = FLD(IJ,K21,MM1) + ZDELAM*FKLAMB2
+                SL(IJ,K1,MP) = SL(IJ,K1,MP) + ZAD*FKLAMP1
+                FLD(IJ,K1,MP) = FLD(IJ,K1,MP) + ZDELAP*FKLAP12
+                SL(IJ,K11,MP) = SL(IJ,K11,MP) + ZAD*FKLAMP2
+                FLD(IJ,K11,MP) = FLD(IJ,K11,MP) + ZDELAP*FKLAP22
+                SL(IJ,K1,MP1) = SL(IJ,K1,MP1) + ZAD*FKLAMPA
+                FLD(IJ,K1,MP1) = FLD(IJ,K1,MP1) + ZDELAP*FKLAPA2
+                SL(IJ,K11,MP1) = SL(IJ,K11,MP1) + ZAD*FKLAMPB
+                FLD(IJ,K11,MP1) = FLD(IJ,K11,MP1) + ZDELAP*FKLAPB2
+              ENDDO
+#endif
             ENDDO
           ENDDO
 
@@ -318,6 +362,7 @@
               K11 = K11W(K,KH)
               K21 = K21W(K,KH)
 
+#if defined(WAM_GPU) || defined(_OPENACC)
               DO IJ=KIJS,KIJL
                 SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )         &
      &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
@@ -408,6 +453,51 @@
                 ENDIF
               ENDIF
               !$loki end split-read-write
+#else
+!             High-frequency boundary: preserve the nested spectral guards.
+              DO IJ=KIJS,KIJL
+                SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )         &
+     &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
+                SAM = GW5*FL1(IJ,K2 ,IM ) + GW6*FL1(IJ,K21,IM )         &
+     &              + GW7*FL1(IJ,K2 ,IM1) + GW8*FL1(IJ,K21,IM1)
+                FIJ = FL1(IJ,K,IC)*FTAIL
+                FAD1 = FIJ*(SAP+SAM)
+                FAD2 = FAD1-2.0_JWRB*SAP*SAM
+                FAD1 = FAD1+FAD2
+                FCEN = FTEMP(IJ)*FIJ
+                ZAD = FAD2*FCEN
+                ZDELAD = FAD1*FTEMP(IJ)
+                ZDELAP = (FIJ-2.0_JWRB*SAM)*DAL1*FCEN
+                ZDELAM = (FIJ-2.0_JWRB*SAP)*DAL2*FCEN
+
+                SL(IJ,K2,MM) = SL(IJ,K2,MM) + ZAD*FKLAMM1
+                FLD(IJ,K2,MM) = FLD(IJ,K2,MM) + ZDELAM*FKLAM12
+                SL(IJ,K21,MM) = SL(IJ,K21,MM) + ZAD*FKLAMM2
+                FLD(IJ,K21,MM) = FLD(IJ,K21,MM) + ZDELAM*FKLAM22
+                IF (MM1 <= NFRE) THEN
+                  SL(IJ,K2,MM1) = SL(IJ,K2,MM1) + ZAD*FKLAMMA
+                  FLD(IJ,K2,MM1) = FLD(IJ,K2,MM1) + ZDELAM*FKLAMA2
+                  SL(IJ,K21,MM1) = SL(IJ,K21,MM1) + ZAD*FKLAMMB
+                  FLD(IJ,K21,MM1) = FLD(IJ,K21,MM1) + ZDELAM*FKLAMB2
+                  IF (MC <= NFRE) THEN
+                    SL(IJ,K,MC) = SL(IJ,K,MC) - 2.0_JWRB*ZAD
+                    FLD(IJ,K,MC) = FLD(IJ,K,MC) - 2.0_JWRB*ZDELAD
+                    IF (MP <= NFRE) THEN
+                      SL(IJ,K1,MP) = SL(IJ,K1,MP) + ZAD*FKLAMP1
+                      FLD(IJ,K1,MP) = FLD(IJ,K1,MP) + ZDELAP*FKLAP12
+                      SL(IJ,K11,MP) = SL(IJ,K11,MP) + ZAD*FKLAMP2
+                      FLD(IJ,K11,MP) = FLD(IJ,K11,MP) + ZDELAP*FKLAP22
+                      IF (MP1 <= NFRE) THEN
+                        SL(IJ,K1,MP1) = SL(IJ,K1,MP1) + ZAD*FKLAMPA
+                        FLD(IJ,K1,MP1) = FLD(IJ,K1,MP1) + ZDELAP*FKLAPA2
+                        SL(IJ,K11,MP1) = SL(IJ,K11,MP1) + ZAD*FKLAMPB
+                        FLD(IJ,K11,MP1) = FLD(IJ,K11,MP1) + ZDELAP*FKLAPB2
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDIF
+              ENDDO
+#endif
             ENDDO
           ENDDO
 
@@ -421,6 +511,7 @@
               K11 = K11W(K,KH)
               K21 = K21W(K,KH)
 
+#if defined(WAM_GPU) || defined(_OPENACC)
               DO IJ=KIJS,KIJL
                 SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )        &
      &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
@@ -484,6 +575,41 @@
                 FLD(IJ,K11,MP1) = FLD(IJ,K11,MP1) + DELAP(IJ)*FKLAPB2
               ENDDO
               !$loki end split-read-write
+#else
+!             Low-frequency boundary: retain the guarded lower-bin updates.
+              DO IJ=KIJS,KIJL
+                SAP = GW1*FL1(IJ,K1 ,IP ) + GW2*FL1(IJ,K11,IP )        &
+     &              + GW3*FL1(IJ,K1 ,IP1) + GW4*FL1(IJ,K11,IP1)
+                SAM = GW5*FL1(IJ,K2 ,IM ) + GW6*FL1(IJ,K21,IM )        &
+     &              + GW7*FL1(IJ,K2 ,IM1) + GW8*FL1(IJ,K21,IM1)
+                FIJ = FL1(IJ,K,IC)*FTAIL
+                FAD1 = FIJ*(SAP+SAM)
+                FAD2 = FAD1-2.0_JWRB*SAP*SAM
+                FAD1 = FAD1+FAD2
+                FCEN = FTEMP(IJ)*FIJ
+                ZAD = FAD2*FCEN
+                ZDELAD = FAD1*FTEMP(IJ)
+                ZDELAP = (FIJ-2.0_JWRB*SAM)*DAL1*FCEN
+                ZDELAM = (FIJ-2.0_JWRB*SAP)*DAL2*FCEN
+
+                IF (MM1 >= 1) THEN
+                  SL(IJ,K2,MM1) = SL(IJ,K2,MM1) + ZAD*FKLAMMA
+                  FLD(IJ,K2,MM1) = FLD(IJ,K2,MM1) + ZDELAM*FKLAMA2
+                  SL(IJ,K21,MM1) = SL(IJ,K21,MM1) + ZAD*FKLAMMB
+                  FLD(IJ,K21,MM1) = FLD(IJ,K21,MM1) + ZDELAM*FKLAMB2
+                ENDIF
+                SL(IJ,K,MC) = SL(IJ,K,MC) - 2.0_JWRB*ZAD
+                FLD(IJ,K,MC) = FLD(IJ,K,MC) - 2.0_JWRB*ZDELAD
+                SL(IJ,K1,MP) = SL(IJ,K1,MP) + ZAD*FKLAMP1
+                FLD(IJ,K1,MP) = FLD(IJ,K1,MP) + ZDELAP*FKLAP12
+                SL(IJ,K11,MP) = SL(IJ,K11,MP) + ZAD*FKLAMP2
+                FLD(IJ,K11,MP) = FLD(IJ,K11,MP) + ZDELAP*FKLAP22
+                SL(IJ,K1,MP1) = SL(IJ,K1,MP1) + ZAD*FKLAMPA
+                FLD(IJ,K1,MP1) = FLD(IJ,K1,MP1) + ZDELAP*FKLAPA2
+                SL(IJ,K11,MP1) = SL(IJ,K11,MP1) + ZAD*FKLAMPB
+                FLD(IJ,K11,MP1) = FLD(IJ,K11,MP1) + ZDELAP*FKLAPB2
+              ENDDO
+#endif
             ENDDO
           ENDDO
 

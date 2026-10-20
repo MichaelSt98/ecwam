@@ -40,3 +40,18 @@ foreach( prec sp dp )
 
   endif()
 endforeach()
+
+# Check CPU fusion independently of per-source vector-math overrides. Both
+# worker objects use identical precise/no-FMA settings, including on a build
+# whose production SNONLIN was compiled with different exception assumptions.
+if( HAVE_sp AND NOT HAVE_ACC AND NOT HAVE_LOKI AND
+    CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" AND CMAKE_BUILD_TYPE MATCHES "^[Bb][Ii][Tt]$" )
+  ecbuild_add_test(
+    TARGET ecwam_test_snonlin_fusion_sp
+    SOURCES snonlin_fusion_check.F90 snonlin_fused_reference.F90 snonlin_split_reference.F90
+    LIBS ecwam_sp
+    DEFINITIONS WAM_HAVE_SINGLE_PRECISION
+    FFLAGS "-fp-model precise -fp-speculation=safe -no-fma -fpe0 -check bounds"
+  )
+  ecwam_target_compile_definitions_FILENAME( ecwam_test_snonlin_fusion_sp )
+endif()
