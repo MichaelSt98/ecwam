@@ -97,3 +97,22 @@ bash helpers/ecwam-check-snonlin-fusion.sh BUILD_DIRECTORY NEW_OUTPUT_DIRECTORY
 The retained split path is exercised as CPU reference code; these checks do not
 execute on a GPU. Bitwise evidence above concerns the tested compiler, precision,
 flags and inputs.
+
+## Full-size 18-hour confirmation
+
+Job **30372070** built from the clean accepted-tree export compares the original
+SNONLIN reference with the committed CPU fusion under the same strict flags.
+The **entire final O1280 binary spectrum is byte-identical**: 6,106,530,384 SP
+values, 1,296 logical records. All 136 unquantised field/date dumps (68 products
+at hours 12 and 18) are also byte-identical. Rank-local binding preserves those
+same dumps exactly.
+
+The diagnostic run's mean-thread SNONLIN self times are 7.469863 s reference and
+5.946543 s fused; wall times are 419/409 s. These are single longer validation
+runs, with dense raw output and a full checkpoint, rather than another repeated
+production timing study. The four-round result above remains the kernel
+performance evidence.
+
+O48 binary restart continuation at hour 12 reproduces uninterrupted hour-18
+spectra bitwise for the reference and fused implementation. Artifact:
+`tmp/performance-series-20261020/accepted/restart-check/restart-summary.json`.

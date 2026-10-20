@@ -11,13 +11,15 @@ generated commands were checked: SP has the override and DP does not.
 Example addition to a default Atos, SP, fckit, Ninja bundle build:
 
 ```sh
---cmake="ENABLE_SINPUT_ARD_VECTOR_MATH=ON"
+--reconfigure --cmake="ENABLE_SINPUT_ARD_VECTOR_MATH=ON"
 ```
 
 This changes compilation-time floating-point exception assumptions and enables
 SVML vector math; rounding can change. It does not explicitly disable global
 runtime traps. Caller/main-program and DR_HOOK exception settings still apply.
 The tested path has `TAUWSHELTER=0` and `ISNONLIN=0`.
+For an existing bundle build, `--reconfigure` is necessary to apply a changed
+option rather than reuse its cached value; verify the saved CMake cache.
 
 ## Measured performance
 
@@ -95,3 +97,34 @@ tmp/performance-series-20261020/numerics-o48-capture/raw-field-comparison.json
 tmp/performance-series-20261020/variants/sinput-option-final-{off,on}/
 tmp/performance-series-20261020/mixed-config/sinput-precision-audit.json
 ```
+
+## Larger-domain accuracy qualification
+
+The clean accepted-tree O1280 18-hour run, job **30372070**, gives a stronger
+accuracy check than the O48 screen. It compares all 6,106,530,384 final spectrum
+values and raw fields at hours 12 and 18. The SINPUT-only vector mode has:
+
+- Spectrum max absolute error **0.12002325**, max scaled error **0.02186057**,
+  RMS error **4.85055483e-6**; 3,002,553 values exceed the initial pointwise
+  absolute-plus-relative screen, about 0.049% of the spectrum.
+- Raw SWH max difference **0.01158351 m at hour 12** and **0.01492977 m at hour
+  18**. RMS differences over the output grids are **3.4768e-6 / 4.5156e-6 m**,
+  including unchanged missing-grid cells.
+- 124 of 136 field/date dumps differ. Bitwise binding comparisons confirm that
+  these changes come from the vector-math mode, not NUMA placement.
+
+Thus the option is **not an all-fields tolerance pass**: global RMS differences
+are small, but localized spectral-bin changes reach 2.19% under the stated
+scaled metric, and SWH changes reach 1.5 cm. It remains default-off and requires
+case/product-specific accuracy assessment. The bitwise-reproducible selected
+configuration leaves it OFF.
+
+Both strict and vector modes reproduce their own uninterrupted O48 hour-18
+spectrum bitwise after a binary restart at hour 12. The vector-vs-strict hour-18
+O48 spectrum max scaled difference is 2.0522e-3; the earlier table explicitly
+describes the hour-12 spectrum.
+
+Full-size results: `accepted-series-long-20261020/large-validation-summary.json`
+under the scratch benchmark base. These diagnostic runs include large raw field
+output and a complete binary checkpoint; their single wall-time observations
+are not a repeated production speedup estimate.
