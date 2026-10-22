@@ -92,7 +92,6 @@ MODULE SEP3TR_LOKI_MOD
     REAL(KIND=JWRB), INTENT(OUT), DIMENSION(KIJL, NTRAIN) :: EMTRAIN, THTRAIN, PMTRAIN
 
 
-    INTEGER(KIND=JWIM) :: NPMAX_LOC
     INTEGER(KIND=JWIM) :: M, K, IP
     INTEGER(KIND=JWIM), INTENT(IN) :: IJ
     INTEGER(KIND=JWIM) :: ISORT, I, IPLOC
@@ -335,15 +334,13 @@ MODULE SEP3TR_LOKI_MOD
     !        WE ONLY NEED THE FIRST NTRAIN TO BE SORTED
     !        -----------------------------------------------------------------
 
-    NPMAX_LOC = MAXVAL(NPEAK(:))
-
 !$acc loop seq
     DO ISORT=1,NTRAIN
       IPNOW = 0
       ENMAX(IJ) = 0.0_JWRB
 
 !$acc loop seq
-      DO IP=1,NPMAX_LOC
+      DO IP=1,NPMAX
         IF (ENE(IJ, IP) > ENMAX(IJ)) THEN
           IPNOW = IP
           ENMAX(IJ) = ENE(IJ, IP)

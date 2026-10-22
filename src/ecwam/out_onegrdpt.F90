@@ -199,7 +199,7 @@
 !            TAKE RELATION BETWEEN USTAR AND U10G FROM BUILDSTRESS
 !
             CD     = GOUT(I,J,IPCD)
-            U10    = GOUT(I,J,IPU10) 
+            U10    = GOUT(I,J,IPU10)
             HS     = GOUT(I,J,IPHS)
             ZMSS   = GOUT(I,J,IPMSS)
             USTAR2 = MAX(CD*MAX(U10**2,EPSU10**2),EPSUS)
@@ -211,7 +211,7 @@
             ESTAR = G**2*E/(USTAR**4)
             FMSTAR=USTAR/(GOUT(I,J,IPT1)*G)
 
-            HSWS  = GOUT(I,J,IPHSWS) 
+            HSWS  = GOUT(I,J,IPHSWS)
             Tws   = G*ITIME/USTAR
             E     = HSWS**2/16.0_JWRB
             Ews   = G**2*E/(USTAR**4)

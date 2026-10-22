@@ -151,7 +151,7 @@
                 WRITE(NULERR,*) ' -------------------------------------'
                 WRITE(NULERR,*) ' ERROR in OUTINT '
                 WRITE(NULERR,*) ' ACCESSING MORE FIELDS THAN AVAILABLE'
-                WRITE(NULERR,*) ' SIZE(GOUT,3) = ',SIZE(GOUT,3) 
+                WRITE(NULERR,*) ' SIZE(GOUT,3) = ',SIZE(GOUT,3)
                 WRITE(NULERR,*) ' -------------------------------------'
                 CALL ABORT1
               ENDIF

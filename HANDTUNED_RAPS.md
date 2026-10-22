@@ -15,6 +15,25 @@ come from the RAPS checkout. FCM scans `handtuned/` and the RAPS `unwam/`
 sources, avoiding duplicate routine interfaces with the baseline sources.
 The switch is opt-in; the existing source selection is the default.
 
+### Backported OpenACC-relevant changes
+
+The vendored sources also carry these changes from `origin/develop`:
+
+- `a9744721`: contiguous per-field `GOUT(:,:,IFLD)` output layout, including
+  all consumers.
+- `319adb18`: two-element, per-grid-point `CGX/CGY` temporaries in CTUW,
+  retaining the handtuned inline sign comparisons.
+- `c6073c34`: bound SEP3TR partition sorting by NPMAX, including the
+  checked-in `sep3tr.sccs_hoist.F90`, to avoid a cross-column NPEAK reduction.
+- `0fbfffee`: collapse halo packing/unpacking over neighbour, frequency and
+  direction, vectorising halo points. The handtuned MPEXCHNG already has
+  OpenMP-offload branches, so it also includes the prerequisite restructuring
+  from `f1be07f9`. The baseline source keeps its OpenACC-only offload guards.
+
+These changes are applied to both the baseline sources and `handtuned/`;
+a cherry-pick touching only `src/ecwam/` would not update the handtuned build.
+The OpenMP-only NEWWIND, MPUSERIN and CTUWUPDT changes were not imported.
+
 ## Build contract
 
 - Single precision, NVIDIA OpenACC, separate memory with CUDA; no Loki
