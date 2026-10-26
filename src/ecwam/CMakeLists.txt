@@ -34,6 +34,7 @@ list( APPEND unwam_srcs
 if( NOT TARGET ecwam_intfb )
    if( ECWAM_HANDTUNED_SP )
       set( ecwam_interface_directories handtuned src/ecwam/unwam )
+      set( ecwam_interface_files src/ecwam/cpgrbobstrct.F90 )
       set( ecwam_interface_source_dir ${PROJECT_SOURCE_DIR} )
    else()
       set( ecwam_interface_directories ecwam )
@@ -42,6 +43,7 @@ if( NOT TARGET ecwam_intfb )
    ecbuild_generate_fortran_interfaces(
        TARGET ecwam_intfb
        DIRECTORIES ${ecwam_interface_directories}
+       FILES ${ecwam_interface_files}
        SOURCE_DIR ${ecwam_interface_source_dir}
        DESTINATION intfb
        INCLUDE_DIRS ecwam_intfb_includes
