@@ -77,10 +77,10 @@ SUBROUTINE PROPAG_WAM (BLK2GLO, WAVNUM, CGROUP, OMOSNH2KD, FL1, &
       REAL(KIND=JWRB), DIMENSION(NPROMA_WAM, NCHNK), INTENT(IN) :: DEPTH, DELLAM1, COSPHM1, UCUR, VCUR
 
 
-      INTEGER(KIND=JWIM) :: IJ, K, M, J, II
+      INTEGER(KIND=JWIM) :: IJ, K, M, J, IO
       INTEGER(KIND=JWIM) :: JKGLO, NPROMA, MTHREADS
       INTEGER(KIND=JWIM) :: NSTEP_LF, ISUBST
-      INTEGER(KIND=JWIM) :: IJSG, IJLG, ICHNK, KIJS, KIJL, IJSB, IJLB
+      INTEGER(KIND=JWIM) :: IJSG, IJLG, ICHNK, KIJS, KIJL, IJSB
       INTEGER(KIND=JWIM) :: ND3SF1, ND3EF1, ND3S, ND3E
 
       REAL(KIND=JPHOOK) :: ZHOOK_HANDLE, ZHOOK_HANDLE_MPI
@@ -117,20 +117,17 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
 !!! the advection schemes are still written in block structure
 !!! mapping chuncks to block ONLY for actual grid points !!!!
 #ifdef _OPENACC
-        !$acc parallel loop gang private(KIJS, IJSB, KIJL, IJLB) vector_length(NPROMA_WAM)
+        !$acc parallel loop gang vector collapse(4)
 #else
-!$OMP   PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, IJSB, KIJL, IJLB, M, K, IJ)
+!$OMP   PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, M, K, IJ)
 #endif /*_OPENACC*/
         DO ICHNK = 1, NCHNK
-          KIJS = 1
-          IJSB = IJFROMCHNK(KIJS, ICHNK)
-          KIJL = KIJL4CHNK(ICHNK)
-          IJLB = IJFROMCHNK(KIJL, ICHNK)
           DO M = 1, NFRE_RED
             DO K = 1, NANG
-              !$acc loop vector
-              DO IJ = KIJS,KIJL
-                FL1_EXT(IJ-KIJS+IJSB, K, M) = FL1(IJ, K, M, ICHNK)
+              DO IJ = 1, NPROMA_WAM
+                IF (IJ <= KIJL4CHNK(ICHNK)) THEN
+                  FL1_EXT(IJ-1+IJFROMCHNK(1, ICHNK), K, M) = FL1(IJ, K, M, ICHNK)
+                ENDIF
               ENDDO
             ENDDO
           ENDDO
@@ -266,18 +263,16 @@ IF (LHOOK) CALL DR_HOOK('PROPAG_WAM',0,ZHOOK_HANDLE)
                DO WHILE (ISUBST <= NSTEP_LF)
 
 #ifdef _OPENACC
-!$acc parallel loop gang private(KIJS, KIJL) vector_length(NPROMA)
+!$acc parallel loop gang vector collapse(4) private(IJ)
 #else
-!$OMP            PARALLEL DO SCHEDULE(STATIC,1) PRIVATE(JKGLO, KIJS, KIJL, M, K, IJ)
+!$OMP            PARALLEL DO SCHEDULE(STATIC,1) PRIVATE(JKGLO, M, K, IO, IJ)
 #endif /*_OPENACC*/
                  DO JKGLO = IJSG, IJLG, NPROMA
-                   KIJS=JKGLO
-                   KIJL=MIN(KIJS+NPROMA-1, IJLG)
                    DO M = ND3S, ND3E
                      DO K = 1, NANG
-                       !$acc loop vector
-                       DO IJ = KIJS, KIJL
-                         FL1_EXT(IJ, K, M) = FL3_EXT(IJ, K, M)
+                       DO IO = 0, NPROMA-1
+                         IJ = JKGLO + IO
+                         IF (IJ <= IJLG) FL1_EXT(IJ, K, M) = FL3_EXT(IJ, K, M)
                        ENDDO
                      ENDDO
                    ENDDO
@@ -365,41 +360,28 @@ ENDIF  ! end sub time steps (if needed)
 
 !!! the advection schemes are still written in block structure
 !!!  So need to convert back to the nproma_wam chuncks
+!!! fictitious points (J > KIJL) keep the values of the first point in the chunk
 #ifdef _OPENACC
-        !$acc kernels loop independent private(KIJS, IJSB, KIJL, IJLB)
+        !$acc parallel loop gang vector collapse(4) private(IJSB)
 #else
-!$OMP     PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, IJSB, KIJL, IJLB, M, K, II, J)
+!$OMP     PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, M, K, J, IJSB)
 #endif /*_OPENACC*/
           DO ICHNK = 1, NCHNK
-            KIJS = 1
-            IJSB = IJFROMCHNK(KIJS, ICHNK)
-            KIJL = KIJL4CHNK(ICHNK)
-            IJLB = IJFROMCHNK(KIJL, ICHNK)
-            !$acc loop independent collapse(3)
             DO M = 1, NFRE_RED
               DO K = 1, NANG
-                 DO J = KIJS, KIJL
-                   II = IJSB + J - KIJS
-                   FL1(J, K, M, ICHNK) = FL3_EXT(II, K, M)
-                 ENDDO
-              ENDDO
-            ENDDO
-
-            IF (KIJL < NPROMA_WAM) THEN
-              !!! make sure fictious points keep values of the first point in the chunk
-              !$acc loop independent collapse(3)
-              DO M = 1, NFRE_RED
-                DO K = 1, NANG
-                  DO J = KIJL+1,NPROMA_WAM
-                    FL1(J, K, M, ICHNK) = FL1(1, K, M, ICHNK)
-                  ENDDO
+                DO J = 1, NPROMA_WAM
+                  IJSB = IJFROMCHNK(1, ICHNK)
+                  IF (J <= KIJL4CHNK(ICHNK)) THEN
+                    FL1(J, K, M, ICHNK) = FL3_EXT(IJSB + J - 1, K, M)
+                  ELSE
+                    FL1(J, K, M, ICHNK) = FL3_EXT(IJSB, K, M)
+                  ENDIF
                 ENDDO
               ENDDO
-            ENDIF
-
+            ENDDO
           ENDDO
 #ifdef _OPENACC
-        !$acc end kernels
+        !$acc end parallel loop
 #else
 !$OMP     END PARALLEL DO
 #endif /*_OPENACC*/
