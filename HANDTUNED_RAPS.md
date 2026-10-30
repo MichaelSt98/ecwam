@@ -29,6 +29,19 @@ The vendored sources also carry these changes from `origin/develop`:
   direction, vectorising halo points. The handtuned MPEXCHNG already has
   OpenMP-offload branches, so it also includes the prerequisite restructuring
   from `f1be07f9`. The baseline source keeps its OpenACC-only offload guards.
+- `58e7e074` (PR #192), OpenACC-only backport: collapse the PROPDOT,
+  CTUW and PROENVHALO current-update kernels over spectral and point indices.
+  PROPDOT uses a per-thread current-gradient scalar rather than reusing the
+  last SDOT frequency as scratch. CTUW accumulates both refraction and
+  frequency-shift weights in SUMWN on OpenACC and removes nested blocking
+  kernel directives. CPU CFL checks/accumulation, interfaces, device-data
+  access and existing handtuned OpenMP-target paths are retained; the newer
+  develop offload/mapping prerequisites are not imported. Extracted kernels
+  pass 6,400 SP/DP OpenACC-host comparisons with GNU bounds and floating-point
+  checks (including refraction modes, masked points, partial frequency ranges
+  and empty/partial chunks). Preprocessed CPU and existing handtuned
+  OpenMP-target executable paths are unchanged. NVIDIA GPU build/runtime
+  validation remains pending.
 
 These changes are applied to both the baseline sources and `handtuned/`;
 a cherry-pick touching only `src/ecwam/` would not update the handtuned build.

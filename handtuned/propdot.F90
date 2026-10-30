@@ -91,6 +91,9 @@
       INTEGER(KIND=JWIM) :: IJ, K, M
 
       REAL(KIND=JWRB) :: CD, SD, SS, SC, CC
+#ifdef _OPENACC
+      REAL(KIND=JWRB) :: SDOTK
+#endif
       REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
       REAL(KIND=JWRB), DIMENSION(KIJS:KIJL) :: DDPHI, DDLAM, DUPHI, DULAM
@@ -188,10 +191,64 @@
 !*    2.5. LOOP OVER DIRECTIONS.
 !          ---------------------
 
+#ifdef _OPENACC
+        !$acc parallel loop gang vector collapse(2) private(SD,CD,SS,SC,CC)
+        DO K=1,NANG
+          DO IJ = KIJS,KIJL
+            SD = SINTH(K)
+            CD = COSTH(K)
+
+!*    2.5.1. DEPTH GRADIENT OF THETA DOT.
+!            ----------------------------
+
+            IF (IREFRA == 1 .OR. IREFRA == 3) THEN
+              THDD(IJ,K) = SD*DDPHI(IJ) - CD*DDLAM(IJ)*DCO(IJ)
+            ELSE
+              THDD(IJ,K) = 0.0_JWRB
+            ENDIF
+
+!*    2.5.2 THETA DOT PART FROM CURRENT GRADIENT.
+!           -------------------------------------
+
+            IF (IREFRA == 2 .OR. IREFRA == 3) THEN
+              SS  = SD**2
+              SC  = SD*CD
+              CC  = CD**2
+              THDC(IJ,K) =  SS*DUPHI(IJ) + SC*DVPHI(IJ)               &
+     &                    - (SC*DULAM(IJ) + CC*DVLAM(IJ))*DCO(IJ)
+            ENDIF
+          ENDDO
+        ENDDO
+        !$acc end parallel loop
+
+!*    2.5.3 SIGMA DOT FROM CURRENT GRADIENT, LOOP OVER FREQUENCIES.
+!           -------------------------------------------------------
+
+        IF (IREFRA == 2 .OR. IREFRA == 3) THEN
+          !$acc parallel loop gang vector collapse(3) private(SD,CD,SS,SC,CC,SDOTK)
+          DO K=1,NANG
+            DO M=1,NFRE_RED
+              DO IJ=KIJS,KIJL
+                SD = SINTH(K)
+                CD = COSTH(K)
+                SS  = SD**2
+                SC  = SD*CD
+                CC  = CD**2
+                SDOTK = -SC*DUPHI(IJ) - CC*DVPHI(IJ)      &
+     &                  - (SS*DULAM(IJ) + SC*DVLAM(IJ))*DCO(IJ)
+                SDOT(IJ,K,M) = (SDOTK*CGROUP_EXT(IJ,M)   &
+     &           + OMDD(IJ)*OMOSNH2KD_EXT(IJ,M)) * WAVNUM_EXT(IJ,M)
+              ENDDO
+            ENDDO
+          ENDDO
+          !$acc end parallel loop
+        ENDIF
+
+        !$acc end data
+
+#else
 #ifdef OMPGPU
         !$omp target teams distribute private(SD,CD,SS,SC,CC)
-#else
-        !$acc parallel loop
 #endif
         DO K=1,NANG
           SD = SINTH(K)
@@ -203,8 +260,6 @@
           IF (IREFRA == 1 .OR. IREFRA == 3) THEN
 #ifdef OMPGPU
             !$omp parallel do
-#else
-            !$acc loop
 #endif
             DO IJ = KIJS,KIJL
               THDD(IJ,K) = SD*DDPHI(IJ) - CD*DDLAM(IJ)*DCO(IJ)
@@ -212,8 +267,6 @@
           ELSE
 #ifdef OMPGPU
             !$omp parallel do
-#else
-            !$acc loop
 #endif
             DO IJ = KIJS,KIJL
               THDD(IJ,K) = 0.0_JWRB
@@ -230,8 +283,6 @@
             CC  = CD**2
 #ifdef OMPGPU
             !$omp parallel do
-#else
-            !$acc loop
 #endif
             DO IJ = KIJS,KIJL
               SDOT(IJ,K,NFRE_RED) = -SC*DUPHI(IJ) - CC*DVPHI(IJ)      &
@@ -243,9 +294,6 @@
 !*    2.5.3 LOOP OVER FREQUENCIES.
 !           ----------------------
 
-#ifndef OMPGPU
-            !$acc loop independent collapse(2)
-#endif
             DO M=1,NFRE_RED
 #ifdef OMPGPU
               !$omp parallel do
@@ -263,9 +311,8 @@
 #ifdef OMPGPU
         !$omp end target teams distribute
         !$omp end target data
-#else
-        !$acc end parallel loop
-        !$acc end data
+#endif
+
 #endif
 
       IF (LHOOK) CALL DR_HOOK('PROPDOT',1,ZHOOK_HANDLE)

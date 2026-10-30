@@ -48,7 +48,12 @@ SUBROUTINE PROENVHALO (NINF, NSUP,                            &
       REAL(KIND=JWRB), DIMENSION(NPROMA_WAM, NCHNK), INTENT(IN) :: DEPTH, DELLAM1, COSPHM1, UCUR, VCUR
 
       INTEGER(KIND=JWIM) :: IJ, M
-      INTEGER(KIND=JWIM) :: ICHNK, KIJS, KIJL, IJSB, IJLB
+      INTEGER(KIND=JWIM) :: ICHNK
+#ifdef _OPENACC
+      INTEGER(KIND=JWIM) :: IJB
+#else
+      INTEGER(KIND=JWIM) :: KIJS, KIJL, IJSB, IJLB
+#endif
 
       REAL(KIND=JPHOOK) :: ZHOOK_HANDLE, ZHOOK_HANDLE_MPI
 
@@ -60,17 +65,37 @@ IF (LHOOK) CALL DR_HOOK('PROENVHALO',0,ZHOOK_HANDLE)
 
 !!! mapping chuncks to block ONLY for actual grid points !!!!
 #ifdef _OPENACC
-!$acc kernels loop private(ICHNK, KIJS, IJSB, KIJL, IJLB)
+!$acc parallel loop gang vector collapse(3) private(IJB)
+      DO ICHNK = 1, NCHNK
+!       THE EXTRA ITERATION M = NFRE_RED+1 COPIES THE FIELDS WITHOUT A FREQUENCY INDEX
+        DO M = 1, NFRE_RED+1
+          DO IJ = 1, NPROMA_WAM
+            IF (IJ <= KIJL4CHNK(ICHNK)) THEN
+              IJB = IJFROMCHNK(1, ICHNK) + IJ - 1
+              IF (M <= NFRE_RED) THEN
+                BUFFER_EXT(IJB, M) = WAVNUM(IJ, M, ICHNK)
+                BUFFER_EXT(IJB, M + NFRE_RED) = CGROUP(IJ, M, ICHNK)
+                BUFFER_EXT(IJB, M + 2*NFRE_RED) = OMOSNH2KD(IJ, M, ICHNK)
+              ELSE
+                BUFFER_EXT(IJB, 3*NFRE_RED+1) = DELLAM1(IJ, ICHNK)
+                BUFFER_EXT(IJB, 3*NFRE_RED+2) = COSPHM1(IJ, ICHNK)
+                BUFFER_EXT(IJB, 3*NFRE_RED+3) = DEPTH(IJ, ICHNK)
+                BUFFER_EXT(IJB, 3*NFRE_RED+4) = UCUR(IJ, ICHNK)
+                BUFFER_EXT(IJB, 3*NFRE_RED+5) = VCUR(IJ, ICHNK)
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+!$acc end parallel loop
 #else
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(ICHNK, KIJS, IJSB, KIJL, IJLB, M)
-#endif /*_OPENACC*/
       DO ICHNK = 1, NCHNK
         KIJS = 1
         IJSB = IJFROMCHNK(KIJS, ICHNK)
         KIJL = KIJL4CHNK(ICHNK)
         IJLB = IJFROMCHNK(KIJL, ICHNK)
 
-!$acc loop
         DO M = 1, NFRE_RED
           BUFFER_EXT(IJSB:IJLB, M) = WAVNUM(KIJS:KIJL, M,ICHNK)
           BUFFER_EXT(IJSB:IJLB, M + NFRE_RED) = CGROUP(KIJS:KIJL, M,ICHNK)
@@ -83,11 +108,8 @@ IF (LHOOK) CALL DR_HOOK('PROENVHALO',0,ZHOOK_HANDLE)
         BUFFER_EXT(IJSB:IJLB, 3*NFRE_RED+4) = UCUR(KIJS:KIJL,ICHNK)
         BUFFER_EXT(IJSB:IJLB, 3*NFRE_RED+5) = VCUR(KIJS:KIJL,ICHNK)
       ENDDO
-#ifdef _OPENACC
-!$acc end kernels
-#else
 !$OMP END PARALLEL DO
-#endif /*_OPENACC*/
+#endif
 
 #ifdef WAM_GPU
       CALL WVPRPT_LAND%GET_DEVICE_DATA_RDONLY()
